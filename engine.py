@@ -14,6 +14,7 @@ from PyQt4 import QtCore
 # TODO multiprocessing
 # TODO method to execute something in gui thread
 # TODO create engine with params, async - method
+import time
 
 POOL_TIMEOUT = 0.01
 
@@ -23,14 +24,22 @@ class SetResult(Exception):
         self.result = result
 
 
-def async(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        print func, args, kwargs
-        gen = func(*args, **kwargs)
-        if isinstance(gen, types.GeneratorType):
-            return Runner(gen).run()
-    return wrapper
+class Engine(object):
+    def __init__(self, pooling_func=time.sleep, pool_timeout=POOL_TIMEOUT):
+        self.pooling_func = pooling_func  # TODO rename
+        self.pool_timeout = pool_timeout
+
+    def async(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print func, args, kwargs
+            gen = func(*args, **kwargs)
+            if isinstance(gen, types.GeneratorType):
+                return self.create_runner(gen).run()
+        return wrapper
+
+    def create_runner(self, gen):
+        return Runner(self, gen)
 
 
 class Task(object):
@@ -81,7 +90,8 @@ class AllProcessTasks(AllTasks):
 
 
 class Runner(object):
-    def __init__(self, gen):
+    def __init__(self, engine, gen):
+        self.engine = engine
         self.gen = gen
 
     def run(self):
@@ -119,9 +129,9 @@ class Runner(object):
         future = executor.submit(task)
         while True:
             try:
-                result = future.result(POOL_TIMEOUT)
+                result = future.result(self.engine.pool_timeout)
             except futures.TimeoutError:
-                self.run_gui_loop()
+                self.engine.pooling_func(self.engine.pool_timeout)
             # TODO canceled error
             except Exception as exc:
                 return gen.throw(*sys.exc_info())
@@ -131,8 +141,8 @@ class Runner(object):
     def _execute_multi_task(self, gen, executor, task):
         future_tasks = [executor.submit(t) for t in task.tasks]
         while True:
-            if futures.wait(future_tasks, POOL_TIMEOUT).not_done:
-                self.run_gui_loop()
+            if futures.wait(future_tasks, self.engine.pool_timeout).not_done:
+                self.engine.pooling_func(self.engine.pool_timeout)
             else:
                 break
         if task.skip_errors:
@@ -149,12 +159,12 @@ class Runner(object):
                 return gen.throw(*sys.exc_info())
         return gen.send(results)
 
-    def run_gui_loop(self):
-        # TODO extract this to library specific
-        QtCore.QCoreApplication.processEvents(
-            QtCore.QEventLoop.AllEvents,
-            int(POOL_TIMEOUT * 1000)
-        )
+
+def qt_idle(timeout):
+    QtCore.QCoreApplication.processEvents(
+        QtCore.QEventLoop.AllEvents,
+        int(timeout * 1000)
+    )
 
 
 def set_result(result):

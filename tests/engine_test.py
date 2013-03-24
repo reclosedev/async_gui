@@ -6,10 +6,12 @@ import thread
 import multiprocessing
 
 from engine import (
-    async, Task, AllTasks, set_result,
+    Engine, Task, AllTasks, set_result,
     ProcessTask, AllProcessTasks
 )
 
+eng = Engine()
+async = eng.async
 
 class EngineTestCase(unittest.TestCase):
 
@@ -105,7 +107,7 @@ class EngineTestCase(unittest.TestCase):
 
 
 def mp_func(caller_name):
-    #print multiprocessing.current_process().name, caller_name
+    print multiprocessing.current_process().name, caller_name
     return 42
 
 

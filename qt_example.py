@@ -10,11 +10,13 @@ import urllib
 from PyQt4 import QtCore, QtGui
 import math
 
-from engine import async, Task, AllTasks, AllProcessTasks
+from engine import Engine, Task, AllTasks, AllProcessTasks, qt_idle
 
 def print_thread(message=""):
     print message, "in thread", thread.get_ident()
 
+engine = Engine(qt_idle)
+async = engine.async
 
 class MainWidget(QtGui.QWidget):
 
