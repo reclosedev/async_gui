@@ -3,8 +3,12 @@
 import unittest
 import time
 import thread
+import multiprocessing
 
-from engine import async, Task, MultiTask, set_result
+from engine import (
+    async, Task, AllTasks, set_result,
+    ProcessTask, AllProcessTask
+)
 
 
 class EngineTestCase(unittest.TestCase):
@@ -12,6 +16,7 @@ class EngineTestCase(unittest.TestCase):
     def setUp(self):
         super(EngineTestCase, self).setUp()
         self._main_thread = thread.get_ident()
+        self._main_process = multiprocessing.current_process().name
 
     def test_async(self):
         self.async_method()
@@ -22,6 +27,23 @@ class EngineTestCase(unittest.TestCase):
             r = yield Task(self.simple_method)
             set_result(r)
         self.assertEquals(func(), 42)
+
+    def test_async_process(self):
+        @async
+        def func():
+            r = yield ProcessTask(mp_func, self._main_process)
+            set_result(r)
+        self.assertEquals(func(), 42)
+
+    def test_async_multiprocess(self):
+        @async
+        def func():
+            n = 10
+            tasks = [ProcessTask(mp_func, self._main_process)
+                     for _ in range(n)]
+            results = yield AllProcessTask(tasks, max_workers=4)
+            self.assertEquals(results, [42] * n)
+        func()
 
     @async
     def async_method(self):
@@ -34,6 +56,7 @@ class EngineTestCase(unittest.TestCase):
 
         def simple_func():
             return 42
+
         r1 = yield Task(simple_func)
         r2 = yield Task(self.simple_method)
         self.assertEqual(r1, r2)
@@ -43,23 +66,24 @@ class EngineTestCase(unittest.TestCase):
         t = time.time()
         sleep_time = 0.1
 
-        def for_multi_raises(need_raise=False):
+        def for_multi(need_raise=False):
+            print thread.get_ident()
             time.sleep(sleep_time)
             if need_raise:
                 raise Exception()
-            return i
+            return 42
 
-        tasks = [Task(for_multi_raises) for i in range(10)]
-        tasks.append(Task(for_multi_raises, True))
+        tasks = [Task(for_multi) for i in range(10)]
+        tasks.append(Task(for_multi, True))
 
         with self.assertRaises(Exception):
-            yield MultiTask(tasks)
+            yield AllTasks(tasks)
 
-        results = yield MultiTask(tasks, skip_errors=True)
+        results = yield AllTasks(tasks, skip_errors=True)
         self.assertEquals(len(results), len(tasks) - 1)
         self.assert_(time.time() - t < len(tasks) * sleep_time)
 
-        results = yield MultiTask([Task(simple_func) for _ in range(10)],
+        results = yield AllTasks([Task(for_multi) for _ in range(10)],
                                   max_workers=2)
         self.assertEquals(results, [42] * 10)
         # test pooling, for coverage
@@ -71,6 +95,12 @@ class EngineTestCase(unittest.TestCase):
 
     def simple_method(self):
         return 42
+
+
+def mp_func(caller_name):
+    print multiprocessing.current_process().name, caller_name
+    return 42
+
 
 if __name__ == '__main__':
     unittest.main()

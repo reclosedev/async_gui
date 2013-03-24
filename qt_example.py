@@ -9,7 +9,7 @@ import urllib
 
 from PyQt4 import QtCore, QtGui
 
-from engine import async, Task, MultiTask
+from engine import async, Task, AllTasks
 
 def print_thread(message=""):
     print message, "in thread", thread.get_ident()
