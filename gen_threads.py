@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import functools
+from concurrent import futures
 import multiprocessing
 import pickle
 import sys
@@ -14,90 +15,19 @@ import threading
 from functools import partial, wraps
 
 
-class BaseExecutor(object):
-    def __init__(self, task):
-        super(BaseExecutor, self).__init__()
-        self.task = task
-        self.done = self.create_event()
-        self.result = None
-        self.exception = None
-
-    def start(self):
-        self.execute()
-
-    def execute(self):
-        try:
-            self.result = self.task.execute()
-        except Exception as e:
-            self.exception = e
-        finally:
-            self.done.set()
-
-    def is_ready(self):
-        return self.done.is_set()
-
-    def wait_ready(self, timeout=None):
-        self.done.wait(timeout)
-
-    def create_event(self, *args, **kwargs):
-        return threading.Event(*args, **kwargs)
-
-
-class QThreadRunner(QtCore.QThread):
-    def __init__(self, task, parent=None):
-        QtCore.QThread.__init__(self, parent)
-        self.task = task
-
-    def run(self):
-        self.task()
-
-
-class QThreadExecutor(BaseExecutor):
-    def __init__(self, task):
-        super(QThreadExecutor, self).__init__(task)
-        self._thread = QThreadRunner(super(QThreadExecutor, self).execute)
-
-    def start(self):
-        self._thread.start()
-
-
-class MPHelper(object):
-    def __init__(self, mp_executor):
-        self.executor = mp_executor
-
-    def __call__(self):
-        print "in helper call"
-        self.executor.execute()
-
-
-class MPExecutor(BaseExecutor):
-    def __init__(self, task):
-        super(MPExecutor, self).__init__(task)
-
-    def start(self):
-        self._process = multiprocessing.Process(
-            #target=MPHelper(self)
-            target=super(MPExecutor, self).execute
-        )
-        self._process.start()
-
-    def create_event(self, *args, **kwargs):
-        return multiprocessing.Event()
-
-# s = pickle.dumps(MPExecutor(None))
-# o = pickle.loads(s)
-# print o
-
 class Task(object):
-    executor = QThreadExecutor
+    executor = futures.ThreadPoolExecutor
+    concurrency = 1
 
     def __init__(self, func, *args, **kwargs):
         self.func = func
         self.args = args
         self.kwargs = kwargs
 
-    def execute(self):
+    def start(self):
         return self.func(*self.args, **self.kwargs)
+
+    __call__ = start
 
     def __repr__(self):
         return ('%s(%s, %r, %r)' %
@@ -105,8 +35,10 @@ class Task(object):
                  self.args, self.kwargs))
 
 
+
+
 class MPTask(Task):
-    executor = MPExecutor
+    executor = futures.ProcessPoolExecutor
 
 POOL_TIMEOUT = 0.01
 
@@ -115,29 +47,33 @@ def engine(func):
     def wrapper(*args, **kwargs):
         print func, args, kwargs
         gen = func(*args, **kwargs)
-        result = None
+        task = None
+        task = gen.next()
         while True:
             try:
-                task = gen.send(result)
                 print task
-                try:
-                    executor = task.executor(task)
-                    executor.start()
-                    while not executor.is_ready():
-                        QtCore.QCoreApplication.processEvents(
-                            QtCore.QEventLoop.AllEvents,
-                            int(POOL_TIMEOUT * 1000))
-                        executor.wait_ready(POOL_TIMEOUT)
-                    result = executor.result
-                except Exception as e:
-                    print e
-                    break
+                with task.executor(task.concurrency) as executor:
+                    future = executor.submit(task)
+                    while True:
+                        try:
+                            result = future.result(POOL_TIMEOUT)
+                            task = gen.send(result)
+                            break
+                        except futures.TimeoutError:
+                            # TODO extract this to library specific
+                            QtCore.QCoreApplication.processEvents(
+                                QtCore.QEventLoop.AllEvents,
+                                int(POOL_TIMEOUT * 1000)
+                            )
+                        # TODO canceled error
+                        except Exception as exc:
+                            task = gen.throw(*sys.exc_info())
+                            break
             except StopIteration:
                 print "stop iteration"
                 break
             except Exception as exc:
-                print exc
-        pass
+                raise
     return wrapper
 
 
@@ -181,33 +117,44 @@ class MainWidget(QtGui.QWidget):
         self.image_result_label.clear()
         self.status_label.setText("Loading...")
         image = yield Task(self.load_image, url)
+        print image
         #time.sleep(1)
         pixmap = QtGui.QPixmap.fromImage(image).scaledToWidth(200)
         self.image_label.setPixmap(pixmap)
+
+        try:
+            num = yield Task(self.with_error)
+        except ZeroDivisionError:
+            print "can handle exceptions"
+
         self.status_label.setText("Calculating histogram...")
-        histo_image = yield MPTask(analyze_image, image)
+        histo_image = yield Task(analyze_image, image)
         self.image_result_label.setPixmap(QtGui.QPixmap.fromImage(histo_image))
         self.status_label.setText("Ready")
 
     def load_image(self, url):
-        print_thread("heavy")
         print "open"
         data = urllib.urlopen(url).read()
         print "downloaded", len(data)
         image = QtGui.QImage.fromData(data)
         return image
 
+    def with_error(self):
+        return 1/0
+
 
 def analyze_image(image, height=200):
-    print "analyzing"
+    print "analyze"
     histogram = [0] * 256
     for i in range(image.width()):
         for j in range(image.height()):
             color = QtGui.QColor(image.pixel(i, j))
             histogram[color.lightness()] += 1
+
     max_value = max(histogram)
     scale = float(height) / max_value
     width = len(histogram)
+    print scale, width, max_value
     histo_img = QtGui.QImage(
         QtCore.QSize(width, height),
         QtGui.QImage.Format_ARGB32
@@ -221,6 +168,7 @@ def analyze_image(image, height=200):
         p.drawLine(i, height, i, y)
     p.end()
     return histo_img
+
 
 def main():
     app = QtGui.QApplication(sys.argv)
