@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 import functools
+import types
 from concurrent import futures
 import multiprocessing
 import pickle
@@ -30,15 +31,23 @@ class Task(object):
     __call__ = start
 
     def __repr__(self):
-        return ('%s(%s, %r, %r)' %
+        return ('<%s(%s, %r, %r)>' %
                 (self.__class__.__name__, self.func.__name__,
                  self.args, self.kwargs))
 
 
 class MultiTask(Task):
-    def __init__(self, tasks, max_workers=1):
-        self.tasks = tasks
+    def __init__(self, tasks, max_workers=None, skip_errors=False):
+        self.tasks = list(tasks)
+        if max_workers is None:
+            max_workers = len(self.tasks)
         self.max_workers = max_workers
+        self.skip_errors = skip_errors
+
+    def __repr__(self):
+        return ('<%s(%s)>' %
+                (self.__class__.__name__, self.tasks))
+
 
 class MPTask(Task):
     executor = futures.ProcessPoolExecutor
@@ -50,34 +59,76 @@ def engine(func):
     def wrapper(*args, **kwargs):
         print func, args, kwargs
         gen = func(*args, **kwargs)
-        task = None
+        if isinstance(gen, types.GeneratorType):
+            Runner(gen).run()
+    return wrapper
+
+
+class Runner(object):
+    def __init__(self, gen):
+        self.gen = gen
+
+    def run(self):
+        gen = self.gen
         task = gen.next()
         while True:
             try:
                 print task
                 with task.executor(task.max_workers) as executor:
-                    future = executor.submit(task)
-                    while True:
-                        try:
-                            result = future.result(POOL_TIMEOUT)
-                            task = gen.send(result)
-                            break
-                        except futures.TimeoutError:
-                            # TODO extract this to library specific
-                            QtCore.QCoreApplication.processEvents(
-                                QtCore.QEventLoop.AllEvents,
-                                int(POOL_TIMEOUT * 1000)
-                            )
-                        # TODO canceled error
-                        except Exception as exc:
-                            task = gen.throw(*sys.exc_info())
-                            break
+                    if isinstance(task, MultiTask):
+                        task = self._execute_multi_task(gen, executor, task)
+                    else:
+                        task = self._execute_single_task(gen, executor, task)
             except StopIteration:
                 print "stop iteration"
                 break
             except Exception as exc:
+                print "reraising"
                 raise
-    return wrapper
+
+    def _execute_single_task(self, gen, executor, task):
+        future = executor.submit(task)
+        while True:
+            try:
+                result = future.result(POOL_TIMEOUT)
+            except futures.TimeoutError:
+                self.run_gui_loop()
+            # TODO canceled error
+            except Exception as exc:
+                return gen.throw(*sys.exc_info())
+            else:
+                return gen.send(result)
+
+    def _execute_multi_task(self, gen, executor, task):
+        future_tasks = [executor.submit(t) for t in task.tasks]
+        while True:
+            if futures.wait(future_tasks, POOL_TIMEOUT).not_done:
+                self.run_gui_loop()
+            else:
+                break
+        if task.skip_errors:
+            results = []
+            for f in future_tasks:
+                try:
+                    results.append(f.result())
+                except Exception:
+                    pass
+        else:
+            try:
+                results = [f.result() for f in future_tasks]
+            except Exception:
+                return gen.throw(*sys.exc_info())
+        return gen.send(results)
+
+
+    def run_gui_loop(self):
+        # TODO extract this to library specific
+        QtCore.QCoreApplication.processEvents(
+            QtCore.QEventLoop.AllEvents,
+            int(POOL_TIMEOUT * 1000)
+        )
+
+
 
 
 def set_result(result):
@@ -134,6 +185,17 @@ class MainWidget(QtGui.QWidget):
         histo_image = yield Task(analyze_image, image)
         self.image_result_label.setPixmap(QtGui.QPixmap.fromImage(histo_image))
         self.status_label.setText("Ready")
+        try:
+            results = yield MultiTask(Task(self.for_multi, i) for i in range(10))
+            print results
+        except ZeroDivisionError:
+            print "ZERO"
+        results = yield MultiTask([Task(self.for_multi, i) for i in range(10)],
+                                  skip_errors=True)
+        print results
+
+
+
 
     def load_image(self, url):
         print "open"
@@ -144,6 +206,11 @@ class MainWidget(QtGui.QWidget):
 
     def with_error(self):
         return 1/0
+
+    def for_multi(self, i):
+        print "multi", i
+        time.sleep(1)
+        return float(1) / (5 - i)
 
 
 def analyze_image(image, height=200):
