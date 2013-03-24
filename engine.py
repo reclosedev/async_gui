@@ -13,6 +13,7 @@ from PyQt4 import QtCore
 # TODO set_result with exceptions
 # TODO multiprocessing
 # TODO method to execute something in gui thread
+# TODO create engine with params, async - method
 
 POOL_TIMEOUT = 0.01
 
@@ -56,6 +57,7 @@ class ProcessTask(Task):
     executor = futures.ProcessPoolExecutor
 
 
+# TODO better names
 class AllTasks(Task):
     def __init__(self, tasks, max_workers=None, skip_errors=False):
         self.tasks = list(tasks)
@@ -89,6 +91,15 @@ class Runner(object):
         while True:
             try:
                 print task
+                if isinstance(task, (list, tuple)):
+                    assert len(task), "Empty tasks sequence"
+                    tasks = task
+                    first_task = tasks[0]
+                    if isinstance(first_task, ProcessTask):
+                        task = AllProcessTasks(tasks)
+                    else:
+                        task = AllTasks(tasks)
+
                 with task.executor(task.max_workers) as executor:
                     if isinstance(task, AllTasks):
                         task = self._execute_multi_task(gen, executor, task)

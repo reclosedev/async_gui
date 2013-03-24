@@ -45,6 +45,11 @@ class EngineTestCase(unittest.TestCase):
             self.assertEquals(results, [42] * n)
             results = yield AllProcessTasks(tasks, max_workers=1)
             self.assertEquals(results, [42] * n)
+            results = yield tasks
+            self.assertEquals(results, [42] * n)
+            results = yield (Task(self.simple_method),
+                             Task(self.simple_method))
+            self.assertEquals(results, [42] * 2)
         func()
 
     @async
