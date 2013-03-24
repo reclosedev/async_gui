@@ -59,7 +59,8 @@ class EngineTestCase(unittest.TestCase):
         self.assertEquals(len(results), len(tasks) - 1)
         self.assert_(time.time() - t < len(tasks) * sleep_time)
 
-        results = yield MultiTask(Task(simple_func) for _ in range(10))
+        results = yield MultiTask([Task(simple_func) for _ in range(10)],
+                                  max_workers=2)
         self.assertEquals(results, [42] * 10)
         # test pooling, for coverage
         yield Task(time.sleep, 0.5)

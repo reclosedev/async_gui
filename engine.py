@@ -11,6 +11,7 @@ from PyQt4 import QtCore
 # TODO async could return Runner?
 # TODO set_result with exceptions
 # TODO multiprocessing
+# TODO method to execute something in gui thread
 POOL_TIMEOUT = 0.01
 
 
@@ -52,9 +53,7 @@ class Task(object):
 class MultiTask(Task):
     def __init__(self, tasks, max_workers=None, skip_errors=False):
         self.tasks = list(tasks)
-        if max_workers is None:
-            max_workers = len(self.tasks)
-        self.max_workers = max_workers
+        self.max_workers = max_workers if max_workers else len(self.tasks)
         self.skip_errors = skip_errors
 
     def __repr__(self):
@@ -124,7 +123,6 @@ class Runner(object):
             except Exception:
                 return gen.throw(*sys.exc_info())
         return gen.send(results)
-
 
     def run_gui_loop(self):
         # TODO extract this to library specific
