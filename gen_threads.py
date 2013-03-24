@@ -17,7 +17,7 @@ from functools import partial, wraps
 
 class Task(object):
     executor = futures.ThreadPoolExecutor
-    concurrency = 1
+    max_workers = 1
 
     def __init__(self, func, *args, **kwargs):
         self.func = func
@@ -35,7 +35,10 @@ class Task(object):
                  self.args, self.kwargs))
 
 
-
+class MultiTask(Task):
+    def __init__(self, tasks, max_workers=1):
+        self.tasks = tasks
+        self.max_workers = max_workers
 
 class MPTask(Task):
     executor = futures.ProcessPoolExecutor
@@ -52,7 +55,7 @@ def engine(func):
         while True:
             try:
                 print task
-                with task.executor(task.concurrency) as executor:
+                with task.executor(task.max_workers) as executor:
                     future = executor.submit(task)
                     while True:
                         try:
