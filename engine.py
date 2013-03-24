@@ -7,6 +7,27 @@ from concurrent import futures
 
 from PyQt4 import QtCore
 
+# TODO way to define gui toolkit
+# TODO async could return Runner?
+# TODO set_result with exceptions
+# TODO multiprocessing
+POOL_TIMEOUT = 0.01
+
+
+class SetResult(Exception):
+    def __init__(self, result):
+        self.result = result
+
+
+def async(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print func, args, kwargs
+        gen = func(*args, **kwargs)
+        if isinstance(gen, types.GeneratorType):
+            return Runner(gen).run()
+    return wrapper
+
 
 class Task(object):
     executor = futures.ThreadPoolExecutor
@@ -43,20 +64,6 @@ class MultiTask(Task):
 class MPTask(Task):
     executor = futures.ProcessPoolExecutor
 
-POOL_TIMEOUT = 0.01
-
-def async(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        print func, args, kwargs
-        gen = func(*args, **kwargs)
-        if isinstance(gen, types.GeneratorType):
-            Runner(gen).run()
-    return wrapper
-
-# TODO way to define gui toolkit
-# TODO async could return Runner?
-# TODO set_result with exceptions
 
 class Runner(object):
     def __init__(self, gen):
@@ -77,6 +84,9 @@ class Runner(object):
             except StopIteration:
                 print "stop iteration"
                 break
+            except SetResult as e:
+                # TODO how to terminate generator
+                return e.result
             except Exception as exc:
                 print "reraising"
                 raise
@@ -125,7 +135,7 @@ class Runner(object):
 
 
 def set_result(result):
-    pass
+    raise SetResult(result)
 
 
 

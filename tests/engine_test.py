@@ -4,7 +4,7 @@ import unittest
 import time
 import thread
 
-from engine import async, Task, MultiTask
+from engine import async, Task, MultiTask, set_result
 
 
 class EngineTestCase(unittest.TestCase):
@@ -15,7 +15,13 @@ class EngineTestCase(unittest.TestCase):
 
     def test_async(self):
         self.async_method()
-        #self.assertEqual(True, False)
+
+    def test_async_with_result(self):
+        @async
+        def func():
+            r = yield Task(self.simple_method)
+            set_result(r)
+        self.assertEquals(func(), 42)
 
     @async
     def async_method(self):
@@ -55,9 +61,9 @@ class EngineTestCase(unittest.TestCase):
 
         results = yield MultiTask(Task(simple_func) for _ in range(10))
         self.assertEquals(results, [42] * 10)
+        # test pooling, for coverage
         yield Task(time.sleep, 0.5)
         # TODO different gui toolkits test for no pool
-
 
     def throwing(self, message):
         raise Exception(message)
