@@ -4,6 +4,7 @@ import sys
 import types
 from functools import wraps
 from concurrent import futures
+import multiprocessing
 
 from PyQt4 import QtCore
 
@@ -65,8 +66,16 @@ class AllTasks(Task):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
 
 
-class AllProcessTask(AllTasks):
+class AllProcessTasks(AllTasks):
     executor = futures.ProcessPoolExecutor
+
+    def __init__(self, tasks, max_workers=None, skip_errors=False, **kwargs):
+        # None for ProcessPoolExecutor means cpu count
+        if max_workers is None:
+            max_workers = multiprocessing.cpu_count()
+        super(AllProcessTasks, self).__init__(
+            tasks, max_workers, skip_errors, **kwargs
+        )
 
 
 class Runner(object):

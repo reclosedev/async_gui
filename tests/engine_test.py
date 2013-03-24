@@ -7,7 +7,7 @@ import multiprocessing
 
 from engine import (
     async, Task, AllTasks, set_result,
-    ProcessTask, AllProcessTask
+    ProcessTask, AllProcessTasks
 )
 
 
@@ -41,7 +41,9 @@ class EngineTestCase(unittest.TestCase):
             n = 10
             tasks = [ProcessTask(mp_func, self._main_process)
                      for _ in range(n)]
-            results = yield AllProcessTask(tasks, max_workers=4)
+            results = yield AllProcessTasks(tasks)
+            self.assertEquals(results, [42] * n)
+            results = yield AllProcessTasks(tasks, max_workers=1)
             self.assertEquals(results, [42] * n)
         func()
 
@@ -98,7 +100,7 @@ class EngineTestCase(unittest.TestCase):
 
 
 def mp_func(caller_name):
-    print multiprocessing.current_process().name, caller_name
+    #print multiprocessing.current_process().name, caller_name
     return 42
 
 
