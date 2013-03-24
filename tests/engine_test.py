@@ -5,10 +5,11 @@ import time
 import thread
 import multiprocessing
 
-from engine import (
+from async_gui.engine import (
     Engine, Task, AllTasks, set_result,
     ProcessTask, AllProcessTasks
 )
+from async_gui.toolkits.pyqt import PyQtEngine as Engine
 
 eng = Engine()
 async = eng.async

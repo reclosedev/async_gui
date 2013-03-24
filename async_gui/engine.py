@@ -6,7 +6,7 @@ from functools import wraps
 from concurrent import futures
 import multiprocessing
 
-from PyQt4 import QtCore
+
 
 # TODO way to define gui toolkit
 # TODO async could return Runner?
@@ -158,13 +158,6 @@ class Runner(object):
             except Exception:
                 return gen.throw(*sys.exc_info())
         return gen.send(results)
-
-
-def qt_idle(timeout):
-    QtCore.QCoreApplication.processEvents(
-        QtCore.QEventLoop.AllEvents,
-        int(timeout * 1000)
-    )
 
 
 def set_result(result):

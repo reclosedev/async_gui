@@ -1,22 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
+sys.path.insert(0, "..")
 from functools import partial
 import time
 import thread
-import threading
 import urllib
-
-from PyQt4 import QtCore, QtGui
 import math
 
-from engine import Engine, Task, AllTasks, AllProcessTasks, qt_idle
+from PyQt4 import QtCore, QtGui
+from async_gui.engine import Task, AllProcessTasks
+from async_gui.toolkits.pyqt import PyQtEngine
+
+from cpu_work import is_prime, PRIMES
 
 def print_thread(message=""):
     print message, "in thread", thread.get_ident()
 
-engine = Engine(qt_idle)
+engine = PyQtEngine()
 async = engine.async
+
 
 class MainWidget(QtGui.QWidget):
 
@@ -141,29 +144,6 @@ class MainWidget(QtGui.QWidget):
         p.end()
         return histo_img
 
-PRIMES = [
-    112272535095293,
-    112582705942171,
-    112272535095293,
-    115280095190773,
-    115797848077099,
-    1099726899285419,
-    112272535095293,
-    115280095190773,
-    115797848077099,
-    1099726899285419,
-]
-
-
-def is_prime(n):
-    if n % 2 == 0:
-        return False
-
-    sqrt_n = int(math.floor(math.sqrt(n)))
-    for i in xrange(3, sqrt_n + 1, 2):
-        if n % i == 0:
-            return False
-    return True
 
 def main():
     app = QtGui.QApplication(sys.argv)
