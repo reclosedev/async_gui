@@ -8,8 +8,9 @@ import threading
 import urllib
 
 from PyQt4 import QtCore, QtGui
+import math
 
-from engine import async, Task, AllTasks
+from engine import async, Task, AllTasks, AllProcessTasks
 
 def print_thread(message=""):
     print message, "in thread", thread.get_ident()
@@ -35,6 +36,9 @@ class MainWidget(QtGui.QWidget):
         button3 = QtGui.QPushButton(
             text="With progress", clicked=self.with_progress,
         )
+        button4 = QtGui.QPushButton(
+            text="CPU bound", clicked=self.cpu_bound,
+            )
         self.image_label = QtGui.QLabel()
         self.status_label = QtGui.QLabel("Status")
         self.image_result_label = QtGui.QLabel()
@@ -42,6 +46,7 @@ class MainWidget(QtGui.QWidget):
         layout.addWidget(button)
         layout.addWidget(button2)
         layout.addWidget(button3)
+        layout.addWidget(button4)
         layout.addWidget(self.status_label)
         hlayout.addWidget(self.image_label)
         hlayout.addWidget(self.image_result_label)
@@ -76,6 +81,24 @@ class MainWidget(QtGui.QWidget):
     def with_progress(self, checked):
         result = yield Task(self.task_with_progress)
         self.status_label.setText(result)
+
+    @async
+    def cpu_bound(self, checked):
+        t = time.time()
+        self.status_label.setText("calculating...")
+        prime_flags = yield AllProcessTasks(
+            [Task(is_prime, n) for n in PRIMES],
+        )
+        print time.time() - t
+        text = '\n'.join("%s: %s" % (n, prime)
+                         for n, prime in zip(PRIMES, prime_flags))
+        self.status_label.setText(text)
+
+    def cpu_bound_serial(self, checked):
+        t = time.time()
+        for i in PRIMES:
+            print is_prime(i)
+        print time.time() - t
 
     def on_progress(self, current, maximum):
         self.progress_dialog.setRange(0, maximum - 1)
@@ -116,6 +139,29 @@ class MainWidget(QtGui.QWidget):
         p.end()
         return histo_img
 
+PRIMES = [
+    112272535095293,
+    112582705942171,
+    112272535095293,
+    115280095190773,
+    115797848077099,
+    1099726899285419,
+    112272535095293,
+    115280095190773,
+    115797848077099,
+    1099726899285419,
+]
+
+
+def is_prime(n):
+    if n % 2 == 0:
+        return False
+
+    sqrt_n = int(math.floor(math.sqrt(n)))
+    for i in xrange(3, sqrt_n + 1, 2):
+        if n % i == 0:
+            return False
+    return True
 
 def main():
     app = QtGui.QApplication(sys.argv)
