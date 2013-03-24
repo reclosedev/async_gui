@@ -3,6 +3,7 @@
 from collections import defaultdict
 import functools
 import multiprocessing
+import pickle
 import sys
 import urllib
 
@@ -15,16 +16,22 @@ from functools import partial, wraps
 
 class BaseExecutor(object):
     def __init__(self, task):
+        super(BaseExecutor, self).__init__()
         self.task = task
         self.done = self.create_event()
         self.result = None
+        self.exception = None
 
     def start(self):
         self.execute()
 
     def execute(self):
-        self.result = self.task.execute()
-        self.done.set()
+        try:
+            self.result = self.task.execute()
+        except Exception as e:
+            self.exception = e
+        finally:
+            self.done.set()
 
     def is_ready(self):
         return self.done.is_set()
@@ -54,19 +61,32 @@ class QThreadExecutor(BaseExecutor):
         self._thread.start()
 
 
+class MPHelper(object):
+    def __init__(self, mp_executor):
+        self.executor = mp_executor
+
+    def __call__(self):
+        print "in helper call"
+        self.executor.execute()
+
+
 class MPExecutor(BaseExecutor):
     def __init__(self, task):
         super(MPExecutor, self).__init__(task)
-        self._process = multiprocessing.Process(
-            target=super(MPExecutor, self).execute
-        )
 
     def start(self):
+        self._process = multiprocessing.Process(
+            #target=MPHelper(self)
+            target=super(MPExecutor, self).execute
+        )
         self._process.start()
 
     def create_event(self, *args, **kwargs):
         return multiprocessing.Event()
 
+# s = pickle.dumps(MPExecutor(None))
+# o = pickle.loads(s)
+# print o
 
 class Task(object):
     executor = QThreadExecutor
@@ -80,8 +100,9 @@ class Task(object):
         return self.func(*self.args, **self.kwargs)
 
     def __repr__(self):
-        return ('Task(%s, %r, %r)' %
-                (self.func.__name__, self.args, self.kwargs))
+        return ('%s(%s, %r, %r)' %
+                (self.__class__.__name__, self.func.__name__,
+                 self.args, self.kwargs))
 
 
 class MPTask(Task):
@@ -164,7 +185,7 @@ class MainWidget(QtGui.QWidget):
         pixmap = QtGui.QPixmap.fromImage(image).scaledToWidth(200)
         self.image_label.setPixmap(pixmap)
         self.status_label.setText("Calculating histogram...")
-        histo_image = yield Task(self.analyze_image, image)
+        histo_image = yield MPTask(analyze_image, image)
         self.image_result_label.setPixmap(QtGui.QPixmap.fromImage(histo_image))
         self.status_label.setText("Ready")
 
@@ -176,28 +197,30 @@ class MainWidget(QtGui.QWidget):
         image = QtGui.QImage.fromData(data)
         return image
 
-    def analyze_image(self, image, height=200):
-        histogram = [0] * 256
-        for i in range(image.width()):
-            for j in range(image.height()):
-                color = QtGui.QColor(image.pixel(i, j))
-                histogram[color.lightness()] += 1
-        max_value = max(histogram)
-        scale = float(height) / max_value
-        width = len(histogram)
-        histo_img = QtGui.QImage(
-            QtCore.QSize(width, height),
-            QtGui.QImage.Format_ARGB32
-        )
-        print histo_img
-        histo_img.fill(QtCore.Qt.white)
-        p = QtGui.QPainter()
-        p.begin(histo_img)
-        for i, value in enumerate(histogram):
-            y = height - int(value * scale)
-            p.drawLine(i, height, i, y)
-        p.end()
-        return histo_img
+
+def analyze_image(image, height=200):
+    print "analyzing"
+    histogram = [0] * 256
+    for i in range(image.width()):
+        for j in range(image.height()):
+            color = QtGui.QColor(image.pixel(i, j))
+            histogram[color.lightness()] += 1
+    max_value = max(histogram)
+    scale = float(height) / max_value
+    width = len(histogram)
+    histo_img = QtGui.QImage(
+        QtCore.QSize(width, height),
+        QtGui.QImage.Format_ARGB32
+    )
+    print histo_img
+    histo_img.fill(QtCore.Qt.white)
+    p = QtGui.QPainter()
+    p.begin(histo_img)
+    for i, value in enumerate(histogram):
+        y = height - int(value * scale)
+        p.drawLine(i, height, i, y)
+    p.end()
+    return histo_img
 
 def main():
     app = QtGui.QApplication(sys.argv)
