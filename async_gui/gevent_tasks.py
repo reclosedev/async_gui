@@ -45,11 +45,11 @@ class GeventFuture(futures.Future):
 
 
 class GTask(Task):
-    executor = GeventPoolExecutor
+    executor_class = GeventPoolExecutor
 
 
 class MultiGTask(MultiTask):
-    executor = GeventPoolExecutor
+    executor_class = GeventPoolExecutor
 
     def wait(self, executor, tasks, timeout=None):
         executor._pool.join(timeout)

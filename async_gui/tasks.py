@@ -5,8 +5,8 @@ from concurrent import futures
 
 
 class Task(object):
-    # TODO maybe executor_class?
-    executor = futures.ThreadPoolExecutor
+
+    executor_class = futures.ThreadPoolExecutor
     max_workers = 1
 
     def __init__(self, func, *args, **kwargs):
@@ -26,7 +26,7 @@ class Task(object):
 
 
 class ProcessTask(Task):
-    executor = futures.ProcessPoolExecutor
+    executor_class = futures.ProcessPoolExecutor
 
 
 class MultiTask(Task):
@@ -38,7 +38,7 @@ class MultiTask(Task):
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
 
-    # TODO maybe it could accept only executor and timeout
+    # TODO maybe it could accept only executor_class and timeout
     def wait(self, executor, tasks, timeout=None):
         """ Return True if all done, False otherwise
         """
@@ -46,7 +46,7 @@ class MultiTask(Task):
 
 
 class MultiProcessTask(MultiTask):
-    executor = futures.ProcessPoolExecutor
+    executor_class = futures.ProcessPoolExecutor
 
     def __init__(self, tasks, max_workers=None, skip_errors=False, **kwargs):
         # None for ProcessPoolExecutor means cpu count

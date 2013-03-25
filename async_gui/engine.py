@@ -68,7 +68,7 @@ class Runner(object):
                         task = MultiGTask(tasks)
                     else:
                         task = MultiTask(tasks)
-                with task.executor(task.max_workers) as executor:
+                with task.executor_class(task.max_workers) as executor:
                     if isinstance(task, MultiTask):
                         task = self._execute_multi_task(gen, executor, task)
                     else:
