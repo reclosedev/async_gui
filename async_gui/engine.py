@@ -2,19 +2,17 @@
 # -*- coding: utf-8 -*-
 import sys
 import types
+import time
 from functools import wraps
 from concurrent import futures
 import multiprocessing
-
-
-
-# TODO way to define gui toolkit
-# TODO async could return Runner?
-# TODO set_result with exceptions
-# TODO multiprocessing
 # TODO method to execute something in gui thread
 # TODO create engine with params, async - method
-import time
+# TODO separate engine, tasks
+# TODO should i call multiprocessing.freeze_support() ?
+# TODO documentation
+# TODO remove prints
+
 
 POOL_TIMEOUT = 0.02
 
@@ -49,6 +47,7 @@ class Engine(object):
 
 
 class Task(object):
+    # TODO maybe executor_class?
     executor = futures.ThreadPoolExecutor
     max_workers = 1
 
@@ -82,6 +81,7 @@ class AllTasks(Task):
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
 
+    # TODO maybe it could accept only executor and timeout
     def wait(self, executor, tasks, timeout=None):
         """ Return True if all done, False otherwise
         """
@@ -120,6 +120,7 @@ class Runner(object):
                         task = AllProcessTasks(tasks)
                     else:
                         task = AllTasks(tasks)
+                    # TODO gevent tasks?
 
                 with task.executor(task.max_workers) as executor:
                     if isinstance(task, AllTasks):
@@ -130,7 +131,7 @@ class Runner(object):
                 print "stop iteration"
                 break
             except SetResult as e:
-                # TODO how to terminate generator
+                # TODO how to terminate generator?
                 return e.result
             except Exception as exc:
                 print "reraising"

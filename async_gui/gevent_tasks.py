@@ -5,7 +5,7 @@ import gevent
 from .engine import Task, AllTasks
 
 
-class GeventExecutor(futures.Executor):
+class GeventPoolExecutor(futures.Executor):
 
     def __init__(self, max_workers):
         self.max_workers = max_workers
@@ -18,8 +18,9 @@ class GeventExecutor(futures.Executor):
     def shutdown(self, wait=True):
         self._pool.kill(block=wait)
 
-
+# TODO more greenlet methods, also check not overridden Future methods
 class GeventFuture(futures.Future):
+
     def __init__(self, greenlet):
         super(GeventFuture, self).__init__()
         #self._greenlet = gevent.Greenlet()
@@ -43,13 +44,12 @@ class GeventFuture(futures.Future):
 
 
 class GTask(Task):
-    executor = GeventExecutor
+    executor = GeventPoolExecutor
 
 
 class AllGTasks(AllTasks):
-    executor = GeventExecutor
+    executor = GeventPoolExecutor
 
     def wait(self, executor, tasks, timeout=None):
         executor._pool.join(timeout)
         return all(t.ready() for t in tasks)
-

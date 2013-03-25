@@ -61,7 +61,7 @@ class MainWidget(QtGui.QWidget):
     
     def closeEvent(self, event):
         print "close"
-        # TODO how to exit properly
+        # TODO how to exit properly?
         #QtGui.QApplication.quit()
         sys.exit(0)
 
