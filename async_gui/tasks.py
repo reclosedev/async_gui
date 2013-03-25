@@ -29,8 +29,7 @@ class ProcessTask(Task):
     executor = futures.ProcessPoolExecutor
 
 
-# TODO better names
-class AllTasks(Task):
+class MultiTask(Task):
     def __init__(self, tasks, max_workers=None, skip_errors=False):
         self.tasks = list(tasks)
         self.max_workers = max_workers if max_workers else len(self.tasks)
@@ -46,13 +45,13 @@ class AllTasks(Task):
         return not futures.wait(tasks, timeout).not_done
 
 
-class AllProcessTasks(AllTasks):
+class MultiProcessTask(MultiTask):
     executor = futures.ProcessPoolExecutor
 
     def __init__(self, tasks, max_workers=None, skip_errors=False, **kwargs):
         # None for ProcessPoolExecutor means cpu count
         if max_workers is None:
             max_workers = multiprocessing.cpu_count()
-        super(AllProcessTasks, self).__init__(
+        super(MultiProcessTask, self).__init__(
             tasks, max_workers, skip_errors, **kwargs
         )

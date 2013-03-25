@@ -20,7 +20,7 @@ async = engine.async
 class EngineTestCase(unittest.TestCase):
 
     from async_gui.engine import (
-        Task, AllTasks, ProcessTask, AllProcessTasks
+        Task, MultiTask, ProcessTask, MultiProcessTask
     )
     testing_gevent = False
 
@@ -52,9 +52,9 @@ class EngineTestCase(unittest.TestCase):
             n = 10
             tasks = [self.ProcessTask(mp_func, self._main_process)
                      for _ in range(n)]
-            results = yield self.AllProcessTasks(tasks)
+            results = yield self.MultiProcessTask(tasks)
             self.assertEquals(results, [42] * n)
-            results = yield self.AllProcessTasks(tasks, max_workers=1)
+            results = yield self.MultiProcessTask(tasks, max_workers=1)
             self.assertEquals(results, [42] * n)
             results = yield tasks
             self.assertEquals(results, [42] * n)
@@ -95,13 +95,13 @@ class EngineTestCase(unittest.TestCase):
         tasks.append(self.Task(for_multi, True))
 
         with self.assertRaises(ZeroDivisionError):
-            yield self.AllTasks(tasks)
+            yield self.MultiTask(tasks)
 
-        results = yield self.AllTasks(tasks, skip_errors=True)
+        results = yield self.MultiTask(tasks, skip_errors=True)
         self.assertEquals(len(results), len(tasks) - 1)
         self.assert_(time.time() - t < len(tasks) * sleep_time)
 
-        results = yield self.AllTasks(
+        results = yield self.MultiTask(
             [self.Task(for_multi) for _ in range(10)],
             max_workers=2
         )

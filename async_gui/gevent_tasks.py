@@ -2,7 +2,7 @@ from concurrent import futures
 from gevent.pool import Pool
 import gevent
 
-from .tasks import Task, AllTasks
+from .tasks import Task, MultiTask
 
 
 class GeventPoolExecutor(futures.Executor):
@@ -48,7 +48,7 @@ class GTask(Task):
     executor = GeventPoolExecutor
 
 
-class AllGTasks(AllTasks):
+class MultiGTask(MultiTask):
     executor = GeventPoolExecutor
 
     def wait(self, executor, tasks, timeout=None):

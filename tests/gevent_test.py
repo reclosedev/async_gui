@@ -11,12 +11,12 @@ from gevent.monkey import patch_socket
 patch_socket()
 
 from tests.engine_test import EngineTestCase, engine, async
-from async_gui.gevent_tasks import AllGTasks
+from async_gui.gevent_tasks import MultiGTask
 
 
 class GeventExecutorTestCase(EngineTestCase):
     from async_gui.gevent_tasks import GTask as Task
-    from async_gui.gevent_tasks import AllGTasks as AllTasks
+    from async_gui.gevent_tasks import MultiGTask as AllTasks
 
     testing_gevent = True
 
@@ -33,7 +33,7 @@ class GeventExecutorTestCase(EngineTestCase):
         n = 5
         t = time.time()
         urls = ["http://httpbin.org/delay/%s" % delay for _ in range(n)]
-        result = yield AllGTasks([self.Task(download, url) for url in urls])
+        result = yield MultiGTask([self.Task(download, url) for url in urls])
         result2 = yield [self.Task(download, url) for url in urls]
         elapsed = time.time() - t
         self.assertEqual(len(result), n)

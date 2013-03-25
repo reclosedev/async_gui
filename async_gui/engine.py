@@ -6,10 +6,10 @@ import time
 from functools import wraps
 from concurrent import futures
 
-from .tasks import Task, AllTasks, ProcessTask, AllProcessTasks
+from .tasks import Task, MultiTask, ProcessTask, MultiProcessTask
 try:
     # needed for type checks for list of tasks
-    from .gevent_tasks import GTask, AllGTasks
+    from .gevent_tasks import GTask, MultiGTask
 except ImportError:
     GTask = AllGTasks = None
 # TODO method to execute something in gui thread
@@ -63,13 +63,13 @@ class Runner(object):
                     tasks = task
                     first_task = tasks[0]
                     if isinstance(first_task, ProcessTask):
-                        task = AllProcessTasks(tasks)
+                        task = MultiProcessTask(tasks)
                     elif GTask and isinstance(first_task, GTask):
-                        task = AllGTasks(tasks)
+                        task = MultiGTask(tasks)
                     else:
-                        task = AllTasks(tasks)
+                        task = MultiTask(tasks)
                 with task.executor(task.max_workers) as executor:
-                    if isinstance(task, AllTasks):
+                    if isinstance(task, MultiTask):
                         task = self._execute_multi_task(gen, executor, task)
                     else:
                         task = self._execute_single_task(gen, executor, task)

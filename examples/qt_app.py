@@ -11,7 +11,7 @@ else:
 
 
 from PyQt4 import QtCore, QtGui
-from async_gui.engine import Task, AllProcessTasks
+from async_gui.engine import Task, MultiProcessTask
 from async_gui.toolkits.pyqt import PyQtEngine
 
 from cpu_work import is_prime, PRIMES
@@ -95,7 +95,7 @@ class MainWidget(QtGui.QWidget):
     def cpu_bound(self, checked):
         t = time.time()
         self.status_label.setText("calculating...")
-        prime_flags = yield AllProcessTasks(
+        prime_flags = yield MultiProcessTask(
             [Task(is_prime, n) for n in PRIMES],
         )
         print(time.time() - t)

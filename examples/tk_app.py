@@ -3,7 +3,7 @@ sys.path.insert(0, "..")
 import Tkinter as tk
 import time
 
-from async_gui.engine import Task, AllProcessTasks
+from async_gui.engine import Task, MultiProcessTask
 from async_gui.toolkits.tk import TkEngine
 
 from cpu_work import is_prime, PRIMES
@@ -37,7 +37,7 @@ class Application(tk.Frame):
     def cpu_bound(self):
         t = time.time()
         self.status[0]["text"] = "calculating..."
-        prime_flags = yield AllProcessTasks(
+        prime_flags = yield MultiProcessTask(
             [Task(is_prime, n) for n in PRIMES]
         )
         print time.time() - t

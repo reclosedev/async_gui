@@ -6,7 +6,7 @@ import time
 
 import wx
 from async_gui.toolkits.wx import WxEngine
-from async_gui.engine import Task, AllProcessTasks
+from async_gui.engine import Task, MultiProcessTask
 
 from cpu_work import is_prime, PRIMES
 
@@ -46,7 +46,7 @@ class Example(wx.Frame):
     def cpu_bound(self, event):
         t = time.time()
         self.status.SetLabel("calculating...")
-        prime_flags = yield AllProcessTasks(
+        prime_flags = yield MultiProcessTask(
             [Task(is_prime, n) for n in PRIMES]
         )
         print time.time() - t

@@ -1,2 +1,2 @@
-from .tasks import Task, ProcessTask, AllTasks, AllProcessTasks
+from .tasks import Task, ProcessTask, MultiTask, MultiProcessTask
 from .engine import Engine
