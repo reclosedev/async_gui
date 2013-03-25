@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from ..engine import Engine, POOL_TIMEOUT
+from ..engine import Engine
 
 
 class WxEngine(Engine):
-    def __init__(self, pool_timeout=POOL_TIMEOUT):
-        super(WxEngine, self).__init__(self._update_gui, pool_timeout)
-
-    def _update_gui(self, timeout=None):
+    def update_gui(self):
         self.main_app.Yield()
-

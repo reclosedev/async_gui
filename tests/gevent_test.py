@@ -16,8 +16,6 @@ from tests.engine_test import EngineTestCase, engine, async
 from async_gui.gevent_tasks import AllGTasks
 
 
-#engine.pooling_func = gevent.sleep
-
 class GeventExecutorTestCase(EngineTestCase):
     from async_gui.gevent_tasks import GTask as Task
     from async_gui.gevent_tasks import AllGTasks as AllTasks

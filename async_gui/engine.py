@@ -16,7 +16,7 @@ import multiprocessing
 # TODO create engine with params, async - method
 import time
 
-POOL_TIMEOUT = 0.01
+POOL_TIMEOUT = 0.02
 
 
 class SetResult(Exception):
@@ -25,8 +25,7 @@ class SetResult(Exception):
 
 
 class Engine(object):
-    def __init__(self, pooling_func=time.sleep, pool_timeout=POOL_TIMEOUT):
-        self.pooling_func = pooling_func  # TODO rename
+    def __init__(self, pool_timeout=POOL_TIMEOUT):
         self.pool_timeout = pool_timeout
         self.main_app = None
 
@@ -44,6 +43,9 @@ class Engine(object):
 
     def set_main_app(self, app):
         self.main_app = app
+
+    def update_gui(self):
+        return time.sleep(self.pool_timeout)
 
 
 class Task(object):
@@ -140,7 +142,7 @@ class Runner(object):
             try:
                 result = future.result(self.engine.pool_timeout)
             except futures.TimeoutError:
-                self.engine.pooling_func(self.engine.pool_timeout)
+                self.engine.update_gui()
             # TODO canceled error
             except Exception as exc:
                 return gen.throw(*sys.exc_info())
@@ -151,7 +153,7 @@ class Runner(object):
         future_tasks = [executor.submit(t) for t in task.tasks]
         while True:
             if not task.wait(executor, future_tasks, self.engine.pool_timeout):
-                self.engine.pooling_func(self.engine.pool_timeout)
+                self.engine.update_gui()
             else:
                 break
         if task.skip_errors:
