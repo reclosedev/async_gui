@@ -17,6 +17,8 @@ except ImportError:
 # TODO method to execute something in gui thread
 # TODO should i call multiprocessing.freeze_support() ?
 # TODO documentation
+# TODO callbacks
+# TODO cancel tasks, or stop engine
 
 
 POOL_TIMEOUT = 0.02
