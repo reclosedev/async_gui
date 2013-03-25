@@ -1,15 +1,15 @@
 import sys
 sys.path.insert(0, "..")
 import Tkinter as tk
-import threading
 import time
 
-from async_gui.engine import Task, AllProcessTasks, Engine
-#from async_gui.toolkits
+from async_gui.engine import Task, AllProcessTasks
+from async_gui.toolkits.tk import TkEngine
+
 from cpu_work import is_prime, PRIMES
 
 
-engine = Engine()
+engine = TkEngine()
 
 
 class Application(tk.Frame):
@@ -20,7 +20,7 @@ class Application(tk.Frame):
         self.grid_propagate(0)
 
         self.button = tk.Button(self)
-        self.button["text"] = "Count Words"
+        self.button["text"] = "Check primes"
         self.button["command"] = self.cpu_bound
         self.button.grid(column=0, row=0, sticky=tk.E + tk.W)
 
@@ -48,9 +48,7 @@ class Application(tk.Frame):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    # TODO find way to get root singleton
-    # TODO custom class, pooling with sleep
-    engine.pooling_func = lambda *args: root.update()
+    engine.set_main_app(root)
     app = Application(master=root)
     app.mainloop()
 

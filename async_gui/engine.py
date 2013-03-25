@@ -28,6 +28,7 @@ class Engine(object):
     def __init__(self, pooling_func=time.sleep, pool_timeout=POOL_TIMEOUT):
         self.pooling_func = pooling_func  # TODO rename
         self.pool_timeout = pool_timeout
+        self.main_app = None
 
     def async(self, func):
         @wraps(func)
@@ -40,6 +41,9 @@ class Engine(object):
 
     def create_runner(self, gen):
         return Runner(self, gen)
+
+    def set_main_app(self, app):
+        self.main_app = app
 
 
 class Task(object):
