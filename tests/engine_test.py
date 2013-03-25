@@ -16,6 +16,7 @@ from async_gui.engine import set_result, Engine
 engine = Engine()
 async = engine.async
 
+
 class EngineTestCase(unittest.TestCase):
 
     from async_gui.engine import (
@@ -100,8 +101,10 @@ class EngineTestCase(unittest.TestCase):
         self.assertEquals(len(results), len(tasks) - 1)
         self.assert_(time.time() - t < len(tasks) * sleep_time)
 
-        results = yield self.AllTasks([self.Task(for_multi) for _ in range(10)],
-                                  max_workers=2)
+        results = yield self.AllTasks(
+            [self.Task(for_multi) for _ in range(10)],
+            max_workers=2
+        )
         self.assertEquals(results, [42] * 10)
         # test pooling, for coverage
         yield self.Task(self.sleep, 0.5)

@@ -5,10 +5,8 @@ import os
 sys.path.insert(0, os.path.abspath('..'))
 import unittest
 import time
-import thread
-import multiprocessing
 import urllib
-import gevent
+
 from gevent.monkey import patch_socket
 patch_socket()
 
@@ -32,14 +30,15 @@ class GeventExecutorTestCase(EngineTestCase):
             return urllib.urlopen(url).read()
 
         delay = 1
-        n = 10
+        n = 5
         t = time.time()
         urls = ["http://httpbin.org/delay/%s" % delay for _ in range(n)]
         result = yield AllGTasks([self.Task(download, url) for url in urls])
+        result2 = yield [self.Task(download, url) for url in urls]
         elapsed = time.time() - t
         self.assertEqual(len(result), n)
         self.assertLess(elapsed, delay * n)
-        print elapsed
+        print(elapsed)
 
 
 if __name__ == '__main__':

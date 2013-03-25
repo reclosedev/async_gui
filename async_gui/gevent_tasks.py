@@ -2,7 +2,7 @@ from concurrent import futures
 from gevent.pool import Pool
 import gevent
 
-from .engine import Task, AllTasks
+from .tasks import Task, AllTasks
 
 
 class GeventPoolExecutor(futures.Executor):
@@ -17,6 +17,7 @@ class GeventPoolExecutor(futures.Executor):
 
     def shutdown(self, wait=True):
         self._pool.kill(block=wait)
+
 
 # TODO more greenlet methods, also check not overridden Future methods
 class GeventFuture(futures.Future):

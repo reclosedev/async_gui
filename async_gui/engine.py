@@ -5,12 +5,16 @@ import types
 import time
 from functools import wraps
 from concurrent import futures
-import multiprocessing
+
+from .tasks import Task, AllTasks, ProcessTask, AllProcessTasks
+try:
+    # needed for type checks for list of tasks
+    from .gevent_tasks import GTask, AllGTasks
+except ImportError:
+    GTask = AllGTasks = None
 # TODO method to execute something in gui thread
-# TODO separate engine, tasks
 # TODO should i call multiprocessing.freeze_support() ?
 # TODO documentation
-# TODO remove prints
 
 
 POOL_TIMEOUT = 0.02
@@ -44,60 +48,6 @@ class Engine(object):
         return time.sleep(self.pool_timeout)
 
 
-class Task(object):
-    # TODO maybe executor_class?
-    executor = futures.ThreadPoolExecutor
-    max_workers = 1
-
-    def __init__(self, func, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
-
-    def start(self):
-        return self.func(*self.args, **self.kwargs)
-
-    __call__ = start
-
-    def __repr__(self):
-        return ('<%s(%s, %r, %r)>' %
-                (self.__class__.__name__, self.func.__name__,
-                 self.args, self.kwargs))
-
-
-class ProcessTask(Task):
-    executor = futures.ProcessPoolExecutor
-
-
-# TODO better names
-class AllTasks(Task):
-    def __init__(self, tasks, max_workers=None, skip_errors=False):
-        self.tasks = list(tasks)
-        self.max_workers = max_workers if max_workers else len(self.tasks)
-        self.skip_errors = skip_errors
-
-    def __repr__(self):
-        return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
-
-    # TODO maybe it could accept only executor and timeout
-    def wait(self, executor, tasks, timeout=None):
-        """ Return True if all done, False otherwise
-        """
-        return not futures.wait(tasks, timeout).not_done
-
-
-class AllProcessTasks(AllTasks):
-    executor = futures.ProcessPoolExecutor
-
-    def __init__(self, tasks, max_workers=None, skip_errors=False, **kwargs):
-        # None for ProcessPoolExecutor means cpu count
-        if max_workers is None:
-            max_workers = multiprocessing.cpu_count()
-        super(AllProcessTasks, self).__init__(
-            tasks, max_workers, skip_errors, **kwargs
-        )
-
-
 class Runner(object):
     def __init__(self, engine, gen):
         self.engine = engine
@@ -105,8 +55,7 @@ class Runner(object):
 
     def run(self):
         gen = self.gen
-        # start generator and receive first task
-        task = next(gen)
+        task = next(gen)  # start generator and receive first task
         while True:
             try:
                 if isinstance(task, (list, tuple)):
@@ -115,10 +64,10 @@ class Runner(object):
                     first_task = tasks[0]
                     if isinstance(first_task, ProcessTask):
                         task = AllProcessTasks(tasks)
+                    elif GTask and isinstance(first_task, GTask):
+                        task = AllGTasks(tasks)
                     else:
                         task = AllTasks(tasks)
-                    # TODO gevent tasks?
-
                 with task.executor(task.max_workers) as executor:
                     if isinstance(task, AllTasks):
                         task = self._execute_multi_task(gen, executor, task)
