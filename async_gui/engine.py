@@ -76,6 +76,11 @@ class AllTasks(Task):
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
 
+    def wait(self, executor, tasks, timeout=None):
+        """ Return True if all done, False otherwise
+        """
+        return not futures.wait(tasks, timeout).not_done
+
 
 class AllProcessTasks(AllTasks):
     executor = futures.ProcessPoolExecutor
@@ -141,7 +146,7 @@ class Runner(object):
     def _execute_multi_task(self, gen, executor, task):
         future_tasks = [executor.submit(t) for t in task.tasks]
         while True:
-            if futures.wait(future_tasks, self.engine.pool_timeout).not_done:
+            if not task.wait(executor, future_tasks, self.engine.pool_timeout):
                 self.engine.pooling_func(self.engine.pool_timeout)
             else:
                 break

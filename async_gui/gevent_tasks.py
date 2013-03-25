@@ -38,6 +38,8 @@ class GeventFuture(futures.Future):
     def running(self):
         return not self._greenlet.ready()
 
+    def ready(self):
+        return self._greenlet.ready()
 
 
 class GTask(Task):
@@ -46,3 +48,8 @@ class GTask(Task):
 
 class AllGTasks(AllTasks):
     executor = GeventExecutor
+
+    def wait(self, executor, tasks, timeout=None):
+        executor._pool.join(timeout)
+        return all(t.ready() for t in tasks)
+
