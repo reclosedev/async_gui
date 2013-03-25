@@ -5,16 +5,17 @@ import time
 import thread
 import multiprocessing
 
-from async_gui.engine import (
-    Engine, Task, AllTasks, set_result,
-    ProcessTask, AllProcessTasks
-)
+from async_gui.engine import set_result
 from async_gui.toolkits.pyqt import PyQtEngine as Engine
 
-eng = Engine()
-async = eng.async
+engine = Engine()
+async = engine.async
 
 class EngineTestCase(unittest.TestCase):
+
+    from async_gui.engine import (
+        Task, AllTasks, ProcessTask, AllProcessTasks
+    )
 
     def setUp(self):
         super(EngineTestCase, self).setUp()
@@ -27,14 +28,14 @@ class EngineTestCase(unittest.TestCase):
     def test_async_with_result(self):
         @async
         def func():
-            r = yield Task(self.simple_method)
+            r = yield self.Task(self.simple_method)
             set_result(r)
         self.assertEquals(func(), 42)
 
     def test_async_process(self):
         @async
         def func():
-            r = yield ProcessTask(mp_func, self._main_process)
+            r = yield self.ProcessTask(mp_func, self._main_process)
             set_result(r)
         self.assertEquals(func(), 42)
 
@@ -42,16 +43,16 @@ class EngineTestCase(unittest.TestCase):
         @async
         def func():
             n = 10
-            tasks = [ProcessTask(mp_func, self._main_process)
+            tasks = [self.ProcessTask(mp_func, self._main_process)
                      for _ in range(n)]
-            results = yield AllProcessTasks(tasks)
+            results = yield self.AllProcessTasks(tasks)
             self.assertEquals(results, [42] * n)
-            results = yield AllProcessTasks(tasks, max_workers=1)
+            results = yield self.AllProcessTasks(tasks, max_workers=1)
             self.assertEquals(results, [42] * n)
             results = yield tasks
             self.assertEquals(results, [42] * n)
-            results = yield (Task(self.simple_method),
-                             Task(self.simple_method))
+            results = yield (self.Task(self.simple_method),
+                             self.Task(self.simple_method))
             self.assertEquals(results, [42] * 2)
         func()
 
@@ -60,15 +61,16 @@ class EngineTestCase(unittest.TestCase):
         def check_the_same_thread():
             return thread.get_ident() == self._main_thread
 
-        is_same_thread = yield Task(check_the_same_thread)
-        self.assertFalse(is_same_thread)
+        if not hasattr(self.Task.executor(1), "_pool"): # HACK for greenlet
+            is_same_thread = yield self.Task(check_the_same_thread)
+            self.assertFalse(is_same_thread)
         self.assert_(check_the_same_thread())
 
         def simple_func():
             return 42
 
-        r1 = yield Task(simple_func)
-        r2 = yield Task(self.simple_method)
+        r1 = yield self.Task(simple_func)
+        r2 = yield self.Task(self.simple_method)
         self.assertEqual(r1, r2)
         with self.assertRaises(Exception):
             yield Task(self.throwing, "test")
@@ -83,21 +85,21 @@ class EngineTestCase(unittest.TestCase):
                 raise Exception()
             return 42
 
-        tasks = [Task(for_multi) for i in range(10)]
-        tasks.append(Task(for_multi, True))
+        tasks = [self.Task(for_multi) for i in range(10)]
+        tasks.append(self.Task(for_multi, True))
 
         with self.assertRaises(Exception):
-            yield AllTasks(tasks)
+            yield self.AllTasks(tasks)
 
-        results = yield AllTasks(tasks, skip_errors=True)
+        results = yield self.AllTasks(tasks, skip_errors=True)
         self.assertEquals(len(results), len(tasks) - 1)
         self.assert_(time.time() - t < len(tasks) * sleep_time)
 
-        results = yield AllTasks([Task(for_multi) for _ in range(10)],
+        results = yield self.AllTasks([self.Task(for_multi) for _ in range(10)],
                                   max_workers=2)
         self.assertEquals(results, [42] * 10)
         # test pooling, for coverage
-        yield Task(time.sleep, 0.5)
+        yield self.Task(time.sleep, 0.5)
         # TODO different gui toolkits test for no pool
 
     def throwing(self, message):
