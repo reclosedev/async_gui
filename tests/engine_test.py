@@ -6,11 +6,12 @@ sys.path.insert(0, os.path.abspath('..'))
 
 import unittest
 import time
-import thread
+from async_gui.compat import thread
 import multiprocessing
 
-from async_gui.engine import set_result
-from async_gui.toolkits.pyqt import PyQtEngine as Engine
+from async_gui.engine import set_result, Engine
+#from async_gui.toolkits.pyqt import PyQtEngine as Engine
+
 
 engine = Engine()
 async = engine.async
@@ -84,7 +85,6 @@ class EngineTestCase(unittest.TestCase):
         sleep_time = 0.1
 
         def for_multi(need_raise=False):
-            print thread.get_ident()
             self.sleep(sleep_time)
             if need_raise:
                 raise ZeroDivisionError()
@@ -122,7 +122,7 @@ class EngineTestCase(unittest.TestCase):
 
 
 def mp_func(caller_name):
-    print multiprocessing.current_process().name, caller_name
+    #print(multiprocessing.current_process().name, caller_name)
     return 42
 
 

@@ -7,7 +7,6 @@ from functools import wraps
 from concurrent import futures
 import multiprocessing
 # TODO method to execute something in gui thread
-# TODO create engine with params, async - method
 # TODO separate engine, tasks
 # TODO should i call multiprocessing.freeze_support() ?
 # TODO documentation
@@ -30,7 +29,6 @@ class Engine(object):
     def async(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            print func, args, kwargs
             gen = func(*args, **kwargs)
             if isinstance(gen, types.GeneratorType):
                 return self.create_runner(gen).run()
@@ -108,10 +106,9 @@ class Runner(object):
     def run(self):
         gen = self.gen
         # start generator and receive first task
-        task = gen.next()
+        task = next(gen)
         while True:
             try:
-                print task
                 if isinstance(task, (list, tuple)):
                     assert len(task), "Empty tasks sequence"
                     tasks = task
@@ -128,13 +125,12 @@ class Runner(object):
                     else:
                         task = self._execute_single_task(gen, executor, task)
             except StopIteration:
-                print "stop iteration"
                 break
             except SetResult as e:
-                # TODO how to terminate generator?
+                gen.close()
                 return e.result
             except Exception as exc:
-                print "reraising"
+                print("reraising")
                 raise
 
     def _execute_single_task(self, gen, executor, task):
@@ -145,7 +141,7 @@ class Runner(object):
             except futures.TimeoutError:
                 self.engine.update_gui()
             # TODO canceled error
-            except Exception as exc:
+            except Exception:
                 return gen.throw(*sys.exc_info())
             else:
                 return gen.send(result)

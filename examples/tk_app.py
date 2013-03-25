@@ -38,7 +38,7 @@ class Application(tk.Frame):
         t = time.time()
         self.status[0]["text"] = "calculating..."
         prime_flags = yield AllProcessTasks(
-            [Task(is_prime, n) for n in PRIMES],
+            [Task(is_prime, n) for n in PRIMES]
         )
         print time.time() - t
         text = '\n'.join("%s: %s" % (n, prime)
