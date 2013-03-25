@@ -20,6 +20,9 @@ from async_gui.gevent_tasks import AllGTasks
 
 class GeventExecutorTestCase(EngineTestCase):
     from async_gui.gevent_tasks import GTask as Task
+    from async_gui.gevent_tasks import AllGTasks as AllTasks
+
+    testing_gevent = True
 
     def test_gevent_urllib(self):
         self.gevent_with_urllib()
@@ -39,11 +42,6 @@ class GeventExecutorTestCase(EngineTestCase):
         self.assertEqual(len(result), n)
         self.assertLess(elapsed, delay * n)
         print elapsed
-
-
-def mp_func(caller_name):
-    print multiprocessing.current_process().name, caller_name
-    return 42
 
 
 if __name__ == '__main__':

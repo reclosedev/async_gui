@@ -20,6 +20,7 @@ class EngineTestCase(unittest.TestCase):
     from async_gui.engine import (
         Task, AllTasks, ProcessTask, AllProcessTasks
     )
+    testing_gevent = False
 
     def setUp(self):
         super(EngineTestCase, self).setUp()
@@ -65,7 +66,7 @@ class EngineTestCase(unittest.TestCase):
         def check_the_same_thread():
             return thread.get_ident() == self._main_thread
 
-        if not hasattr(self.Task.executor(1), "_pool"): # HACK for greenlet
+        if not self.testing_gevent:
             is_same_thread = yield self.Task(check_the_same_thread)
             self.assertFalse(is_same_thread)
         self.assert_(check_the_same_thread())
@@ -76,23 +77,23 @@ class EngineTestCase(unittest.TestCase):
         r1 = yield self.Task(simple_func)
         r2 = yield self.Task(self.simple_method)
         self.assertEqual(r1, r2)
-        with self.assertRaises(Exception):
-            yield Task(self.throwing, "test")
+        with self.assertRaises(ZeroDivisionError):
+            yield self.Task(self.throwing, "test")
 
         t = time.time()
         sleep_time = 0.1
 
         def for_multi(need_raise=False):
             print thread.get_ident()
-            time.sleep(sleep_time)
+            self.sleep(sleep_time)
             if need_raise:
-                raise Exception()
+                raise ZeroDivisionError()
             return 42
 
         tasks = [self.Task(for_multi) for i in range(10)]
         tasks.append(self.Task(for_multi, True))
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(ZeroDivisionError):
             yield self.AllTasks(tasks)
 
         results = yield self.AllTasks(tasks, skip_errors=True)
@@ -103,14 +104,21 @@ class EngineTestCase(unittest.TestCase):
                                   max_workers=2)
         self.assertEquals(results, [42] * 10)
         # test pooling, for coverage
-        yield self.Task(time.sleep, 0.5)
+        yield self.Task(self.sleep, 0.5)
         # TODO different gui toolkits test for no pool
 
     def throwing(self, message):
-        raise Exception(message)
+        raise ZeroDivisionError(message)
 
     def simple_method(self):
         return 42
+
+    def sleep(self, timeout):
+        if self.testing_gevent:
+            import gevent
+            gevent.sleep(timeout)
+        else:
+            time.sleep(timeout)
 
 
 def mp_func(caller_name):
