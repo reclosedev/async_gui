@@ -13,7 +13,7 @@ try:
     # needed for type checks for list of tasks
     from .gevent_tasks import GTask, MultiGTask
 except ImportError:
-    GTask = AllGTasks = None
+    GTask = MultiGTask = None
 # TODO method to execute something in gui thread
 # TODO should i call multiprocessing.freeze_support() ?
 # TODO documentation
@@ -22,7 +22,7 @@ except ImportError:
 POOL_TIMEOUT = 0.02
 
 
-class SetResult(Exception):
+class ReturnResult(Exception):
     """ Used to return result from generator
     """
     def __init__(self, result):
@@ -102,7 +102,7 @@ class Runner(object):
         # TODO document details in module level docs
         """ Runs tasks
 
-        If some task raises :class:`SetResult`, returns it's value...
+        If some task raises :class:`ReturnResult`, returns it's value...
         :return: :raise:
         """
         gen = self.gen
@@ -126,7 +126,7 @@ class Runner(object):
                         task = self._execute_single_task(gen, executor, task)
             except StopIteration:
                 break
-            except SetResult as e:
+            except ReturnResult as e:
                 gen.close()
                 return e.result
             except Exception as exc:
@@ -168,10 +168,10 @@ class Runner(object):
         return gen.send(results)
 
 
-def set_result(result):
+def return_result(result):
     """ Allows to return result from generator
 
-    Internally it raises :class:`SetResult` exception, so take in mind, that
+    Internally it raises :class:`ReturnResult` exception, so take in mind, that
     it can be catched in catch all block
     """
-    raise SetResult(result)
+    raise ReturnResult(result)

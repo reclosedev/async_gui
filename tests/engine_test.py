@@ -9,7 +9,7 @@ import time
 from async_gui.compat import thread
 import multiprocessing
 
-from async_gui.engine import set_result, Engine
+from async_gui.engine import return_result, Engine
 #from async_gui.toolkits.pyqt import PyQtEngine as Engine
 
 
@@ -36,14 +36,14 @@ class EngineTestCase(unittest.TestCase):
         @async
         def func():
             r = yield self.Task(self.simple_method)
-            set_result(r)
+            return_result(r)
         self.assertEquals(func(), 42)
 
     def test_async_process(self):
         @async
         def func():
             r = yield self.ProcessTask(mp_func, self._main_process)
-            set_result(r)
+            return_result(r)
         self.assertEquals(func(), 42)
 
     def test_async_multiprocess(self):
