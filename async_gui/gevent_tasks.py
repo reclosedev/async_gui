@@ -5,7 +5,10 @@ import gevent
 from .tasks import Task, MultiTask
 
 
+# TODO docs about monkey_patch
 class GeventPoolExecutor(futures.Executor):
+    """ Wrapper for `gevent.pool.Pool`
+    """
 
     def __init__(self, max_workers):
         self.max_workers = max_workers
@@ -21,7 +24,8 @@ class GeventPoolExecutor(futures.Executor):
 
 # TODO more greenlet methods, also check not overridden Future methods
 class GeventFuture(futures.Future):
-
+    """ Wrapper for `Greenlet`
+    """
     def __init__(self, greenlet):
         super(GeventFuture, self).__init__()
         #self._greenlet = gevent.Greenlet()
@@ -45,12 +49,16 @@ class GeventFuture(futures.Future):
 
 
 class GTask(Task):
+    """ Task executed in `gevent` Pool
+    """
     executor_class = GeventPoolExecutor
 
 
 class MultiGTask(MultiTask):
+    """ Multiple tasks executed in `gevent` Pool simultaneously
+    """
     executor_class = GeventPoolExecutor
 
-    def wait(self, executor, tasks, timeout=None):
+    def wait(self, executor, spawned_futures, timeout=None):
         executor._pool.join(timeout)
-        return all(t.ready() for t in tasks)
+        return all(f.ready() for f in spawned_futures)

@@ -1,12 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Contains task classes which when yilded from async generator will be
+executed in thread pool, or process pool
+"""
 import multiprocessing
 from concurrent import futures
 
 
 class Task(object):
+    """ Represents single async operation.
 
+    Accepts callable and its args and kwargs::
+
+        result = yield Task(time_consuming_operation, arg, some_kwarg=1)
+    """
+
+    #: Executor class (from `concurrent.futures`) overridded in subclasses
+    #: default is `ThreadPoolExecutor`
     executor_class = futures.ThreadPoolExecutor
+    #: Maximum number of workers, mainly use in MultiTask
     max_workers = 1
 
     def __init__(self, func, *args, **kwargs):
@@ -26,11 +39,22 @@ class Task(object):
 
 
 class ProcessTask(Task):
+    """ Task executed in separate process pool
+    """
     executor_class = futures.ProcessPoolExecutor
 
 
 class MultiTask(Task):
+    """ Tasks container, executes passed tasks simultaneously in ThreadPool
+    """
     def __init__(self, tasks, max_workers=None, skip_errors=False):
+        """
+        :param tasks: list/tuple/generator of tasks
+        :param max_workers: number of simultaneous workers,
+                            default is number of tasks
+        :param skip_errors: if True, tasks which raised exceptions will not be
+                            in resulting list
+        """
         self.tasks = list(tasks)
         self.max_workers = max_workers if max_workers else len(self.tasks)
         self.skip_errors = skip_errors
@@ -38,18 +62,24 @@ class MultiTask(Task):
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
 
-    # TODO maybe it could accept only executor_class and timeout
-    def wait(self, executor, tasks, timeout=None):
-        """ Return True if all done, False otherwise
+    def wait(self, executor, spawned_futures, timeout=None):
+        """ Return True if all tasks done, False otherwise
         """
-        return not futures.wait(tasks, timeout).not_done
+        return not futures.wait(spawned_futures, timeout).not_done
 
 
 class MultiProcessTask(MultiTask):
+    """ Tasks container, executes passed tasks simultaneously in ProcessPool
+    """
     executor_class = futures.ProcessPoolExecutor
 
     def __init__(self, tasks, max_workers=None, skip_errors=False, **kwargs):
-        # None for ProcessPoolExecutor means cpu count
+        """
+        Same parameters as :class:`MultiTask` but one is different:
+
+        :param max_workers: number of simultaneous workers,
+                            default is number of CPU cores
+        """
         if max_workers is None:
             max_workers = multiprocessing.cpu_count()
         super(MultiProcessTask, self).__init__(
