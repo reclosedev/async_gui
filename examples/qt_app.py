@@ -4,18 +4,17 @@ import sys
 sys.path.insert(0, "..")
 from functools import partial
 import time
-import thread
-import urllib
-import math
+if sys.version_info[0] == 3:
+    from urllib.request import urlopen
+else:
+    from urllib import urlopen
+
 
 from PyQt4 import QtCore, QtGui
 from async_gui.engine import Task, AllProcessTasks
 from async_gui.toolkits.pyqt import PyQtEngine
 
 from cpu_work import is_prime, PRIMES
-
-def print_thread(message=""):
-    print message, "in thread", thread.get_ident()
 
 engine = PyQtEngine()
 async = engine.async
@@ -60,14 +59,13 @@ class MainWidget(QtGui.QWidget):
         self.progress_change.connect(self.on_progress)
     
     def closeEvent(self, event):
-        print "close"
+        print("close")
         # TODO how to exit properly?
         #QtGui.QApplication.quit()
         sys.exit(0)
 
     @async
     def do_work(self, url, *rest):
-        print_thread("gui")
         self.image_label.clear()
         self.image_result_label.clear()
         self.status_label.setText("Loading...")
@@ -82,9 +80,9 @@ class MainWidget(QtGui.QWidget):
         self.status_label.setText("Ready")
 
     def load_image(self, url):
-        print "open"
-        data = urllib.urlopen(url).read()
-        print "downloaded", len(data)
+        print("open")
+        data = urlopen(url).read()
+        print("downloaded", len(data))
         image = QtGui.QImage.fromData(data)
         return image
 
@@ -100,7 +98,7 @@ class MainWidget(QtGui.QWidget):
         prime_flags = yield AllProcessTasks(
             [Task(is_prime, n) for n in PRIMES],
         )
-        print time.time() - t
+        print(time.time() - t)
         text = '\n'.join("%s: %s" % (n, prime)
                          for n, prime in zip(PRIMES, prime_flags))
         self.status_label.setText(text)
@@ -108,8 +106,8 @@ class MainWidget(QtGui.QWidget):
     def cpu_bound_serial(self, checked):
         t = time.time()
         for i in PRIMES:
-            print is_prime(i)
-        print time.time() - t
+            print(is_prime(i))
+        print(time.time() - t)
 
     def on_progress(self, current, maximum):
         self.progress_dialog.setRange(0, maximum - 1)
@@ -126,7 +124,6 @@ class MainWidget(QtGui.QWidget):
         return "42"
 
     def analyze_image(self, image, height=200):
-        print "analyze"
         histogram = [0] * 256
         for i in range(image.width()):
             for j in range(image.height()):
@@ -135,12 +132,10 @@ class MainWidget(QtGui.QWidget):
         max_value = max(histogram)
         scale = float(height) / max_value
         width = len(histogram)
-        print scale, width, max_value
         histo_img = QtGui.QImage(
             QtCore.QSize(width, height),
             QtGui.QImage.Format_ARGB32
         )
-        print histo_img
         histo_img.fill(QtCore.Qt.white)
         p = QtGui.QPainter()
         p.begin(histo_img)
@@ -156,7 +151,6 @@ def main():
     window = MainWidget()
     window.resize(640, 480)
     window.show()
-    print 'after start'
     sys.exit(app.exec_())
 
 
