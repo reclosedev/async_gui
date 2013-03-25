@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, "..")
 import Tkinter as tk
 import threading
 import time

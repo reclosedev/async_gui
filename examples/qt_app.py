@@ -31,7 +31,7 @@ class MainWidget(QtGui.QWidget):
         button = QtGui.QPushButton(
             "Start",
             clicked=partial(self.do_work,
-                            "https://www.google.ru/images/srpr/logo4w.png"),
+                            "http://www.google.ru/images/srpr/logo4w.png"),
         )
         button2 = QtGui.QPushButton(
             text="Another work",
@@ -43,7 +43,7 @@ class MainWidget(QtGui.QWidget):
         )
         button4 = QtGui.QPushButton(
             text="CPU bound", clicked=self.cpu_bound,
-            )
+        )
         self.image_label = QtGui.QLabel()
         self.status_label = QtGui.QLabel("Status")
         self.image_result_label = QtGui.QLabel()
@@ -58,6 +58,12 @@ class MainWidget(QtGui.QWidget):
         layout.addLayout(hlayout)
         self.progress_dialog = QtGui.QProgressDialog()
         self.progress_change.connect(self.on_progress)
+    
+    def closeEvent(self, event):
+        print "close"
+        # TODO how to exit properly
+        #QtGui.QApplication.quit()
+        sys.exit(0)
 
     @async
     def do_work(self, url, *rest):
