@@ -28,6 +28,7 @@ class ReturnResult(Exception):
     """ Used to return result from generator
     """
     def __init__(self, result):
+        super(ReturnResult, self).__init__()
         self.result = result
 
 
@@ -113,14 +114,14 @@ class Runner(object):
             try:
                 if isinstance(task, (list, tuple)):
                     assert len(task), "Empty tasks sequence"
-                    tasks = task
-                    first_task = tasks[0]
+                    first_task = task[0]
                     if isinstance(first_task, ProcessTask):
-                        task = MultiProcessTask(tasks)
+                        task = MultiProcessTask(task)
                     elif GTask and isinstance(first_task, GTask):
-                        task = MultiGTask(tasks)
+                        task = MultiGTask(task)
                     else:
-                        task = MultiTask(tasks)
+                        task = MultiTask(task)
+
                 with task.executor_class(task.max_workers) as executor:
                     if isinstance(task, MultiTask):
                         task = self._execute_multi_task(gen, executor, task)
@@ -131,9 +132,6 @@ class Runner(object):
             except ReturnResult as e:
                 gen.close()
                 return e.result
-            except Exception as exc:
-                print("reraising")
-                raise
 
     def _execute_single_task(self, gen, executor, task):
         future = executor.submit(task)

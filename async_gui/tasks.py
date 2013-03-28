@@ -16,7 +16,7 @@ class Task(object):
         result = yield Task(time_consuming_operation, arg, some_kwarg=1)
     """
 
-    #: Executor class (from `concurrent.futures`) overridded in subclasses
+    #: Executor class (from `concurrent.futures`) overridden in subclasses
     #: default is `ThreadPoolExecutor`
     executor_class = futures.ThreadPoolExecutor
     #: Maximum number of workers, mainly use in MultiTask
