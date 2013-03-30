@@ -2,12 +2,8 @@
 # -*- coding: utf-8 -*-
 from PySide import QtCore
 
-from ..engine import Engine
+from ._qt import QtEngine
 
 
-class PySideEngine(Engine):
-    def update_gui(self):
-        QtCore.QCoreApplication.processEvents(
-            QtCore.QEventLoop.AllEvents,
-            int(self.pool_timeout * 1000)
-        )
+class PySideEngine(QtEngine):
+    QtCore = QtCore
