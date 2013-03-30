@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Contains task classes which when yilded from async generator will be
-executed in thread pool, or process pool
+    tasks
+    ~~~~~
+
+    Contains task classes which when yilded from async generator will be
+    executed in thread pool, or process pool
 """
 import multiprocessing
 from concurrent import futures
@@ -11,7 +14,7 @@ from concurrent import futures
 class Task(object):
     """ Represents single async operation.
 
-    Accepts callable and its args and kwargs::
+    Accepts callable and optionally its ``args`` and ``kwargs``::
 
         result = yield Task(time_consuming_operation, arg, some_kwarg=1)
     """

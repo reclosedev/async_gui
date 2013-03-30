@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" Core of library... TODO
+"""
+    engine
+    ~~~~~~~
+
+    Core functionality.
 """
 import sys
 import types
@@ -25,7 +29,7 @@ POOL_TIMEOUT = 0.02
 
 
 class ReturnResult(Exception):
-    """ Used to return result from generator
+    """ Exception Used to return result from generator
     """
     def __init__(self, result):
         super(ReturnResult, self).__init__()
@@ -35,14 +39,17 @@ class ReturnResult(Exception):
 class Engine(object):
     """ Engine base class
 
-    Subclasses should implement :meth:`update_gui`.
-    Contains decorator for functions with async calls :meth:`async`.
-    After creating engine instance, set :prop:`main_app` property
+    After creating engine instance, set :attr:`main_app` property
     (not needed with PyQt/PySide)
+
+    Decorate generator with :meth:`@async <async>` to execute tasks yielded
+    from generator in separate executor and rest operations in GUI thread.
+
+    Subclasses should implement :meth:`update_gui`.
     """
     def __init__(self, pool_timeout=POOL_TIMEOUT):
         """
-        :param pool_timeout: time in seconds which GUI will spend in loop
+        :param pool_timeout: time in seconds which GUI will spend in a loop
                              now works only in PyQt/PySide
         """
         self.pool_timeout = pool_timeout
@@ -64,6 +71,9 @@ class Engine(object):
                 # do something in GUI thread
                 data = yield Task(do_time_consuming_work, param)
                 update_gui_with(data)  # in main GUI thread
+
+        If some task raises :class:`ReturnResult`, it's value will be returned
+        .. seealso:: :func:`return_result`
         """
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -76,17 +86,21 @@ class Engine(object):
         """ Creates :class:`Runner` instance
 
         :param gen: generator which returns async tasks
+
+        Can be overridden if you want custom ``Runner``
         """
         return Runner(self, gen)
 
     def update_gui(self):
         """ Allows GUI to process events
+
+        Should be overridden in subclass
         """
-        return time.sleep(self.pool_timeout)
+        time.sleep(self.pool_timeout)
 
 
 class Runner(object):
-    """ Runs tasks returned by generator
+    """ Internal class that runs tasks returned by generator
     """
     def __init__(self, engine, gen):
         """
@@ -97,11 +111,7 @@ class Runner(object):
         self.gen = gen
 
     def run(self):
-        # TODO document details in module level docs
-        """ Runs tasks
-
-        If some task raises :class:`ReturnResult`, returns it's value...
-        :return: :raise:
+        """ Runs generator and executes tasks
         """
         gen = self.gen
         task = next(gen)  # start generator and receive first task
