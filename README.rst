@@ -41,12 +41,12 @@ Demo of button click handler:
         self.result_label.setText("Average page size: %s" % avg_size)
 
 
-Here tasks yielded from ``on_button_click()`` executed in thread pool, but
+Tasks yielded from ``on_button_click()`` executed in thread pool, but
 GUI updates done in the GUI thread.
 For CPU-bound applications there is also ability to run tasks in pool of
 processes.
 
-See `full example <blob/master/examples/qt_app.py>`_ in `examples` directory.
+See `full example <https://github.com/reclosedev/async_gui/blob/master/examples/qt_app.py>`_ in `examples` directory.
 
 
 Features
@@ -64,6 +64,22 @@ Features
 - Straightforward exception handling
 
 - Full test coverage
+
+Installation
+------------
+
+(not yet)::
+
+    $ pip install async_gui
+
+Or download, unpack and::
+
+    $ python setup.py install
+
+
+To run tests use::
+
+    $ python setup.py test
 
 
 Links

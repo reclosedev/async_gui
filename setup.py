@@ -28,7 +28,7 @@ setup(
         'async_gui.toolkits',
     ],
     version='0.1.0',
-    description='Easy threading and multiprocessing in GUI application',
+    description='Easy threading and multiprocessing in GUI applications',
     author='Roman Haritonov',
     author_email='reclosedev@gmail.com',
     url='https://github.com/reclosedev/async_gui',
