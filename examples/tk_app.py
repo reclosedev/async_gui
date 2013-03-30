@@ -48,7 +48,7 @@ class Application(tk.Frame):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    engine.set_main_app(root)
+    engine.main_app = root
     app = Application(master=root)
     app.mainloop()
 

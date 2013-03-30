@@ -31,7 +31,8 @@ class Example(wx.Frame):
         sizer = wx.GridBagSizer(4, 4)
 
         status = wx.StaticText(panel, label="Status")
-        sizer.Add(status, pos=(0, 0), flag=wx.TOP|wx.LEFT|wx.BOTTOM, border=5)
+        sizer.Add(status, pos=(0, 0),
+                  flag=wx.TOP | wx.LEFT | wx.BOTTOM, border=5)
         self.status = status
 
         button = wx.Button(panel, label="Do work", size=(90, 28))
@@ -57,6 +58,6 @@ class Example(wx.Frame):
 
 if __name__ == '__main__':
     app = wx.App(redirect=False)
-    engine.set_main_app(app)
+    engine.main_app = app
     Example(None, title='Rename')
     app.MainLoop()

@@ -37,8 +37,8 @@ class Engine(object):
 
     Subclasses should implement :meth:`update_gui`.
     Contains decorator for functions with async calls :meth:`async`.
-    After creating engine instance, call :meth:`set_main_app` (not needed on
-    PyQt/PySide)
+    After creating engine instance, set :prop:`main_app` property
+    (not needed with PyQt/PySide)
     """
     def __init__(self, pool_timeout=POOL_TIMEOUT):
         """
@@ -73,16 +73,11 @@ class Engine(object):
         return wrapper
 
     def create_runner(self, gen):
-        """ Returns :class:`Runner` instance
+        """ Creates :class:`Runner` instance
 
         :param gen: generator which returns async tasks
         """
         return Runner(self, gen)
-
-    def set_main_app(self, app):
-        """ Saves reference to GUI application instance
-        """
-        self.main_app = app
 
     def update_gui(self):
         """ Allows GUI to process events
@@ -172,6 +167,6 @@ def return_result(result):
     """ Allows to return result from generator
 
     Internally it raises :class:`ReturnResult` exception, so take in mind, that
-    it can be catched in catch all block
+    it can be catched in catch-all block
     """
     raise ReturnResult(result)

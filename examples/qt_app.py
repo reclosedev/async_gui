@@ -71,7 +71,7 @@ class MainWidget(QtGui.QWidget):
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    engine.set_main_app(app)
+    engine.main_app = app
     window = MainWidget()
     window.resize(640, 480)
     window.show()
