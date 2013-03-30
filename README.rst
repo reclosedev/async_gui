@@ -55,7 +55,7 @@ Features
 - Python 2.7+ (`futures <https://pypi.python.org/pypi/futures>`_ required),
   Python 3+ support
 
-- PyQt4/PySide, Tk, Wx, Gtk? GUI toolkits support. Easy to add another
+- PyQt4/PySide, Tk, Wx, Gtk GUI toolkits support. Easy to add another
 
 - Can execute tasks in Thread, Process, Greenlet (`gevent <http://www.gevent.org/>`_ required)
 
