@@ -68,7 +68,7 @@ Features
 Installation
 ------------
 
-(not yet)::
+Using pip_::
 
     $ pip install async_gui
 
@@ -81,11 +81,12 @@ To run tests use::
 
     $ python setup.py test
 
+.. _pip: http://www.pip-installer.org/en/latest/installing.html
 
 Links
 -----
 
-- TBD!!: **Documentation** at `readthedocs.org <http://readthedocs.org/docs/async_gui/>`_
+- **Documentation** at `readthedocs.org <http://readthedocs.org/docs/async_gui/>`_
 
 - **Source code and issue tracking** at `GitHub <https://github.com/reclosedev/async_gui>`_.
 
