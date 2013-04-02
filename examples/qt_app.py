@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys
+sys.path.insert(0, "..")  # hack
 import time
 from async_gui import MultiProcessTask
 from examples.cpu_work import is_prime, PRIMES
 
-sys.path.insert(0, "..")  # hack
 from PyQt4 import QtGui
 from async_gui.engine import Task
 from async_gui.toolkits.pyqt import PyQtEngine
