@@ -37,7 +37,8 @@ class Mock(object):
             return Mock()
 
 
-MOCK_MODULES = ['PyQt4', 'PySide', 'gtk', 'concurrent', 'gevent']
+MOCK_MODULES = ['PyQt4', 'PySide', 'gtk', 'concurrent',
+                'gevent', 'gevent.pool']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
 
