@@ -6,4 +6,6 @@ from ._qt import QtEngine
 
 
 class PySideEngine(QtEngine):
+    """ PySide support
+    """
     QtCore = QtCore

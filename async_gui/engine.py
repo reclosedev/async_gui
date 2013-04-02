@@ -50,7 +50,6 @@ class Engine(object):
     def __init__(self, pool_timeout=POOL_TIMEOUT):
         """
         :param pool_timeout: time in seconds which GUI will spend in a loop
-                             now works only in PyQt/PySide
         """
         self.pool_timeout = pool_timeout
         #: main application instance

@@ -6,4 +6,6 @@ from ._qt import QtEngine
 
 
 class PyQtEngine(QtEngine):
+    """ PyQt4 support
+    """
     QtCore = QtCore

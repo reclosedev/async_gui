@@ -3,6 +3,10 @@
     ~~~~~~~~~~~~
 
     Tasks executing in ``gevent`` Pool
+
+    .. note:: You need to apply gevent monkey-patch yourself, see
+      `docs <http://www.gevent.org/gevent.monkey.html>`_
+
 """
 from concurrent import futures
 from gevent.pool import Pool

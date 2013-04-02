@@ -4,5 +4,7 @@ from ..engine import Engine
 
 
 class TkEngine(Engine):
+    """ Tkinter support
+    """
     def update_gui(self):
         self.main_app.update()
