@@ -81,6 +81,7 @@ update GUI while executing tasks::
     ...
     sys.exit(app.exec_())
 
+.. note:: It's not necessarily for PyQT4/PySide and Gtk.
 
 Tasks in threads
 ----------------
@@ -126,8 +127,8 @@ for :class:`async_gui.tasks.MultiTask`. Only successful results will be returned
 Tasks in processes
 ------------------
 
-For CPU-bound applications there is also ability to run tasks in pool of
-processes. Just change ``Task`` word to :class:`ProcessTask`
+For CPU-bound applications you can use ability to run tasks in pool of
+processes. Just change :class:`Task` to :class:`ProcessTask`
 
 .. code-block:: python
 
@@ -152,11 +153,11 @@ Tasks in greenlets
 ------------------
 .. currentmodule:: async_gui.gevent_tasks
 
-There is also possibility to run tasks using `gevent <http://www.gevent.org/>`_
+You can also run tasks in `gevent <http://www.gevent.org/>`_  greenlets.
 See :class:`GTask` and :class:`MultiGTask`
 
 .. note:: You need to apply gevent monkey-patch yourself, see
-      `docs <http://www.gevent.org/gevent.monkey.html>`_
+      `Gevent docs <http://www.gevent.org/gevent.monkey.html>`_
 
 
 Returning result
@@ -165,7 +166,7 @@ Returning result
 
 In Python < 3.3 you can't return result from generator. But if you need to,
 you can use :func:`return_result` function which is
-shortcut for raising class:`ReturnResult` exception.
+shortcut for raising :class:`ReturnResult` exception.
 
 
 .. _supported-gui-toolkits:

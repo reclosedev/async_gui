@@ -22,7 +22,7 @@ class Task(object):
     #: Executor class (from `concurrent.futures`) overridden in subclasses
     #: default is `ThreadPoolExecutor`
     executor_class = futures.ThreadPoolExecutor
-    #: Maximum number of workers, mainly use in MultiTask
+    #: Maximum number of workers, mainly used in MultiTask
     max_workers = 1
 
     def __init__(self, func, *args, **kwargs):

@@ -1,8 +1,8 @@
 async_gui
 ---------------
 
-``async_gui`` is a library for make use of threads in GUI applications simpler.
-It inspired by PyCon talk
+``async_gui`` is a library aimed to make use of threads in GUI applications simpler.
+It's inspired by PyCon talk
 `Using futures for async GUI programming in Python 3.3 <http://pyvideo.org/video/1762/using-futures-for-async-gui-programming-in-python>`_
 and `tornado <https://github.com/facebook/tornado>`_ ``@gen.engine`` implementation.
 
@@ -46,7 +46,8 @@ GUI updates done in the GUI thread.
 For CPU-bound applications there is also ability to run tasks in pool of
 processes.
 
-See `full example <https://github.com/reclosedev/async_gui/blob/master/examples/qt_app.py>`_ in `examples` directory.
+See `full example <https://github.com/reclosedev/async_gui/blob/master/examples/qt_app.py>`_
+in `examples <https://github.com/reclosedev/async_gui/tree/master/examples>`_ directory.
 
 
 Features
@@ -86,7 +87,7 @@ To run tests use::
 Links
 -----
 
-- **Documentation** at `readthedocs.org <http://readthedocs.org/docs/async_gui/>`_
+- **Documentation** at `readthedocs.org <https://async_gui.readthedocs.org/en/latest/>`_
 
 - **Source code and issue tracking** at `GitHub <https://github.com/reclosedev/async_gui>`_.
 
