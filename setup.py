@@ -15,11 +15,11 @@ if sys.argv[-1] == 'test':
         os.system('python %s' % test)
     sys.exit()
 
-ver = sys.version_info
-if ver[0] < 3 and ver[1] < 2:
+if sys.version_info < (3, 2):
     install_requires = ['futures']
 else:
     install_requires = []
+
 
 setup(
     name='async_gui',
@@ -28,13 +28,15 @@ setup(
         'async_gui.toolkits',
     ],
     version='0.1.0',
+    license='BSD License',
     description='Easy threading and multiprocessing for GUI applications',
+    long_description=open('README.rst').read() + '\n\n' +
+                     open('HISTORY.rst').read(),
     author='Roman Haritonov',
     author_email='reclosedev@gmail.com',
     url='https://github.com/reclosedev/async_gui',
-    install_requires=install_requires,
     keywords=['GUI', 'thread', 'coroutine', 'futures', 'async'],
-    license='BSD License',
+    install_requires=install_requires,
     include_package_data=True,
     classifiers=[
         'License :: OSI Approved :: BSD License',
@@ -45,6 +47,5 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
     ],
-    long_description=open('README.rst').read() + '\n\n' +
-                     open('HISTORY.rst').read(),
+
 )
