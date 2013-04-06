@@ -41,6 +41,16 @@ class ToolkitsTestCase(unittest.TestCase):
         tk.mainloop()
         self.assertTrue(called[0])
 
+    def test_gtk(self):
+        from async_gui.toolkits.pygtk import GtkEngine
+        import gtk
+        called = [False]
+
+        gtk.timeout_add(10, lambda: self._check_toolkit(GtkEngine,
+                                                  gtk, gtk.main_quit, called))
+        gtk.main()
+        self.assertTrue(called[0])
+
     def test_wx(self):
         from async_gui.toolkits.wx import WxEngine
         import wx
