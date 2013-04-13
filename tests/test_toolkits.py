@@ -11,13 +11,21 @@ from async_gui.engine import Task
 
 class ToolkitsTestCase(unittest.TestCase):
 
-    def test_qt(self):
-        from async_gui.toolkits.pyqt import PyQtEngine
-        from PyQt4 import QtCore
+    def test_pyqt(self):
+        try:
+            from async_gui.toolkits.pyqt import PyQtEngine
+            from PyQt4 import QtCore
+        except ImportError:
+            return self.skipTest("PyQt not installed")
         self._check_qt(PyQtEngine, QtCore)
         self._check_qt(PyQtEngine, QtCore, without_app=True)
-        from async_gui.toolkits.pyside import PySideEngine
-        from PySide import QtCore
+
+    def test_pyside(self):
+        try:
+            from async_gui.toolkits.pyside import PySideEngine
+            from PySide import QtCore
+        except ImportError:
+            return self.skipTest("PySide not installed")
         self._check_qt(PySideEngine, QtCore)
 
     def _check_qt(self, engine_class, QtCore, without_app=False):
@@ -32,8 +40,11 @@ class ToolkitsTestCase(unittest.TestCase):
         self.assertTrue(called[0])
 
     def test_tk(self):
-        from async_gui.toolkits.tk import TkEngine
-        import Tkinter as tk
+        try:
+            from async_gui.toolkits.tk import TkEngine
+            import Tkinter as tk
+        except ImportError:
+            return self.skipTest("Tk not installed")
         called = [False]
         root = tk.Tk()
         root.after(0, lambda: self._check_toolkit(TkEngine,
@@ -42,18 +53,23 @@ class ToolkitsTestCase(unittest.TestCase):
         self.assertTrue(called[0])
 
     def test_gtk(self):
-        from async_gui.toolkits.pygtk import GtkEngine
-        import gtk
+        try:
+            from async_gui.toolkits.pygtk import GtkEngine
+            import gtk
+        except ImportError:
+            return self.skipTest("GTK not installed")
         called = [False]
-
         gtk.timeout_add(10, lambda: self._check_toolkit(GtkEngine,
                                                   gtk, gtk.main_quit, called))
         gtk.main()
         self.assertTrue(called[0])
 
     def test_wx(self):
-        from async_gui.toolkits.wx import WxEngine
-        import wx
+        try:
+            from async_gui.toolkits.wx import WxEngine
+            import wx
+        except ImportError:
+            return self.skipTest("WX not installed")
         called = [False]
         app = wx.App(redirect=False)
         frame = wx.Frame(None)
