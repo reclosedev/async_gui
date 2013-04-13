@@ -52,9 +52,9 @@ class GeventFuture(futures.Future):
         return self._greenlet.exception
 
     def running(self):
-        return not self._greenlet.ready()
+        return not self.done()
 
-    def ready(self):
+    def done(self):
         return self._greenlet.ready()
 
 
@@ -71,4 +71,4 @@ class MultiGTask(MultiTask):
 
     def wait(self, executor, spawned_futures, timeout=None):
         executor._pool.join(timeout)
-        return all(f.ready() for f in spawned_futures)
+        return all(f.done() for f in spawned_futures)
