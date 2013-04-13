@@ -151,6 +151,10 @@ class Runner(object):
                 return gen.send(result)
 
     def _execute_multi_task(self, gen, executor, task):
+        if task.unordered:
+            results_gen = self._execute_multi_gen_task(gen, executor, task)
+            return gen.send(results_gen)
+
         future_tasks = [executor.submit(t) for t in task.tasks]
         while True:
             if not task.wait(executor, future_tasks, self.engine.pool_timeout):
@@ -170,6 +174,22 @@ class Runner(object):
             except Exception:
                 return gen.throw(*sys.exc_info())
         return gen.send(results)
+
+    def _execute_multi_gen_task(self, gen, executor, task):
+        unfinished = set(executor.submit(t) for t in task.tasks)
+        while unfinished:
+            if not task.wait(executor, unfinished, self.engine.pool_timeout):
+                self.engine.update_gui()
+            done = set(f for f in unfinished if f.done())
+            for f in done:
+                try:
+                    result = f.result()
+                except Exception:
+                    if not task.skip_errors:
+                        raise
+                else:
+                    yield result
+            unfinished.difference_update(done)
 
 
 def return_result(result):

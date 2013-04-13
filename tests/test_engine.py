@@ -63,6 +63,24 @@ class EngineTestCase(unittest.TestCase):
             self.assertEquals(results, [42] * 2)
         func()
 
+    def test_multitask_unordered(self):
+        n = 100
+
+        @async
+        def async_exec(tasks, skip_errors):
+            gen = yield self.MultiTask(tasks, unordered=True,
+                                       skip_errors=skip_errors)
+            return_result(list(gen))
+
+        tasks = [self.Task(self.simple_method) for _ in range(n)]
+        self.assertEquals(async_exec(tasks, skip_errors=False), [42] * n)
+        tasks.append(self.Task(self.throwing, "test"))
+        tasks.append(self.Task(self.sleep, 0.1))
+        with self.assertRaises(ZeroDivisionError):
+            async_exec(tasks, skip_errors=False)
+        tasks.append(self.Task(self.throwing, "test"))
+        self.assertEquals(len(async_exec(tasks, skip_errors=True)), n + 1)
+
     @async
     def async_method(self):
         def check_the_same_thread():

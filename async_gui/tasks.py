@@ -50,17 +50,29 @@ class ProcessTask(Task):
 class MultiTask(Task):
     """ Tasks container, executes passed tasks simultaneously in ThreadPool
     """
-    def __init__(self, tasks, max_workers=None, skip_errors=False):
+    def __init__(self, tasks, max_workers=None, skip_errors=False,
+                 unordered=False):
         """
         :param tasks: list/tuple/generator of tasks
         :param max_workers: number of simultaneous workers,
                             default is number of tasks
         :param skip_errors: if True, tasks which raised exceptions will not be
-                            in resulting list
+                            in resulting list/generator
+        :param unordered: if True, result will be returned as  generator,
+                            which yields task's results as it's ready.
+
+        For example::
+
+            tasks = [Task(func, i) for i in range(10)]
+            results_gen = yield MultiTask(tasks, unordered=True)
+            for result in results_gen:
+                show_in_gui(result)
+
         """
         self.tasks = list(tasks)
         self.max_workers = max_workers if max_workers else len(self.tasks)
         self.skip_errors = skip_errors
+        self.unordered = unordered
 
     def __repr__(self):
         return '<%s(%s)>' % (self.__class__.__name__, self.tasks)
