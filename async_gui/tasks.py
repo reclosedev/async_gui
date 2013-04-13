@@ -60,14 +60,6 @@ class MultiTask(Task):
                             in resulting list/generator
         :param unordered: if True, result will be returned as  generator,
                             which yields task's results as it's ready.
-
-        For example::
-
-            tasks = [Task(func, i) for i in range(10)]
-            results_gen = yield MultiTask(tasks, unordered=True)
-            for result in results_gen:
-                show_in_gui(result)
-
         """
         self.tasks = list(tasks)
         self.max_workers = max_workers if max_workers else len(self.tasks)

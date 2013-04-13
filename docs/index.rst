@@ -123,6 +123,23 @@ for :class:`async_gui.tasks.MultiTask`. Only successful results will be returned
     results = yield MultiTask([Task(do_something, i) for i in range(10)],
                               skip_errors=True)
 
+.. versionadded:: 0.2.0
+    ``unordered`` argument for MultiTask
+
+Results from :class:`MultiTask` returned when all tasks finished,
+but if you want to process results one by one as it's ready, you can set
+``unordered`` argument to True, results will be generator, which yields
+finished tasks:
+
+.. code-block:: python
+
+    tasks = [Task(func, i) for i in range(10)]
+    results_gen = yield MultiTask(tasks, unordered=True)
+    for result in results_gen:
+        show_in_gui(result)
+
+See `Unordered MultiTask example <https://github.com/reclosedev/async_gui/blob/master/examples/qt_app_unordered_gen.py>`_
+
 
 Tasks in processes
 ------------------
