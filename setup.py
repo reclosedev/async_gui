@@ -27,7 +27,7 @@ setup(
         'async_gui',
         'async_gui.toolkits',
     ],
-    version='0.1.0',
+    version='0.1.1',
     license='BSD License',
     description='Easy threading and multiprocessing for GUI applications',
     long_description=open('README.rst').read() + '\n\n' +
