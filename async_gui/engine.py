@@ -113,7 +113,10 @@ class Runner(object):
         """ Runs generator and executes tasks
         """
         gen = self.gen
-        task = next(gen)  # start generator and receive first task
+        try:
+            task = next(gen)  # start generator and receive first task
+        except StopIteration:
+            return
         while True:
             try:
                 if isinstance(task, (list, tuple)):

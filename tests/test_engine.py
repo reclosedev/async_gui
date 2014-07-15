@@ -32,6 +32,22 @@ class EngineTestCase(unittest.TestCase):
     def test_async(self):
         self.async_method()
 
+    def test_async_with_return_before_yield(self):  # issue 1
+        called = [False]
+
+        @async
+        def func():
+            called[0] = True
+            return
+            # noinspection PyUnreachableCode
+            yield self.Task(shouldnt_call_this)
+
+        def shouldnt_call_this():
+            called[0] = False
+
+        func()
+        self.assertEquals(called[0], True)
+
     def test_async_with_result(self):
         @async
         def func():
