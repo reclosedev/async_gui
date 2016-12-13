@@ -11,6 +11,21 @@ from async_gui.engine import Task
 
 class ToolkitsTestCase(unittest.TestCase):
 
+    def test_kivy(self):
+        try:
+            from async_gui.toolkits.kivy import KivyEngine
+            from kivy.app import App
+            from kivy.clock import Clock
+        except ImportError:
+            return self.skipTest("Kivy not installed")
+
+        called = [False]
+        root = App()
+        Clock.schedule_once(lambda e: self._check_toolkit( KivyEngine,
+                            root, root.stop, called))
+        root.run()
+        self.assertTrue(called[0])
+
     def test_pyqt(self):
         try:
             from async_gui.toolkits.pyqt import PyQtEngine

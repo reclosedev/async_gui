@@ -1,6 +1,9 @@
 import sys
 sys.path.insert(0, "..")
-import Tkinter as tk
+try:
+    import Tkinter as tk
+except ImportError:
+    import tkinter as tk
 import time
 
 from async_gui.engine import Task, MultiProcessTask
@@ -40,7 +43,7 @@ class Application(tk.Frame):
         prime_flags = yield MultiProcessTask(
             [Task(is_prime, n) for n in PRIMES]
         )
-        print time.time() - t
+        print(time.time() - t)
         text = '\n'.join("%s: %s" % (n, prime)
                          for n, prime in zip(PRIMES, prime_flags))
         self.status[0]["text"] = text
