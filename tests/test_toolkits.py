@@ -44,7 +44,11 @@ class ToolkitsTestCase(unittest.TestCase):
             from async_gui.toolkits.tk import TkEngine
             import Tkinter as tk
         except ImportError:
-            return self.skipTest("Tk not installed")
+            try:
+                import tkinter as tk
+            except ImportError:
+                return self.skipTest("Tk not installed")
+
         called = [False]
         root = tk.Tk()
         root.after(0, lambda: self._check_toolkit(TkEngine,
