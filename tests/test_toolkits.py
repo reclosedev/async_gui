@@ -11,6 +11,21 @@ from async_gui.engine import Task
 
 class ToolkitsTestCase(unittest.TestCase):
 
+    def test_kivy(self):
+        try:
+            from async_gui.toolkits.kivy import KivyEngine
+            from kivy.app import App
+            from kivy.clock import Clock
+        except ImportError:
+            return self.skipTest("Kivy not installed")
+
+        called = [False]
+        root = App()
+        Clock.schedule_once(lambda e: self._check_toolkit( KivyEngine,
+                            root, root.stop, called))
+        root.run()
+        self.assertTrue(called[0])
+
     def test_pyqt(self):
         try:
             from async_gui.toolkits.pyqt import PyQtEngine
@@ -44,7 +59,11 @@ class ToolkitsTestCase(unittest.TestCase):
             from async_gui.toolkits.tk import TkEngine
             import Tkinter as tk
         except ImportError:
-            return self.skipTest("Tk not installed")
+            try:
+                import tkinter as tk
+            except ImportError:
+                return self.skipTest("Tk not installed")
+
         called = [False]
         root = tk.Tk()
         root.after(0, lambda: self._check_toolkit(TkEngine,
